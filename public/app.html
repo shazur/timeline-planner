@@ -6,185 +6,283 @@
 <title>Timeline Planner</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg-base:       #0F1117;
-    --bg-surface:    #1A1D27;
-    --bg-elevated:   #21253A;
-    --bg-hover:      #262B40;
-    --border:        #2A2D3E;
-    --border-active: #3D4260;
-    --accent:        #4F8EF7;
-    --accent-glow:   rgba(79,142,247,0.18);
-    --accent-dim:    rgba(79,142,247,0.12);
-    --purple:        #A78BFA;
-    --purple-dim:    rgba(167,139,250,0.12);
-    --green:         #34D399;
-    --green-dim:     rgba(52,211,153,0.12);
-    --amber:         #FBBF24;
-    --amber-dim:     rgba(251,191,36,0.12);
-    --red:           #F87171;
-    --text-primary:  #E8EAF0;
-    --text-secondary:#9095A8;
-    --text-muted:    #5A6078;
-    --font-ui:       'DM Sans', system-ui, sans-serif;
-    --font-body:     'Inter', system-ui, sans-serif;
-    --font-mono:     'JetBrains Mono', monospace;
-    --radius-sm:     6px;
-    --radius-md:     10px;
-    --radius-lg:     14px;
-    --shadow-card:   0 2px 12px rgba(0,0,0,0.4);
-    --transition:    180ms cubic-bezier(0.4,0,0.2,1);
+    --canvas:      #0C0E14;
+    --glass:       rgba(255,255,255,0.04);
+    --glass-hover: rgba(255,255,255,0.07);
+    --glass-border:rgba(255,255,255,0.08);
+    --glass-active:rgba(255,255,255,0.14);
+    --accent:      #5B9CF6;
+    --accent-glow: rgba(91,156,246,0.22);
+    --accent-dim:  rgba(91,156,246,0.10);
+    --purple:      #A78BFA;
+    --purple-dim:  rgba(167,139,250,0.10);
+    --green:       #34D399;
+    --green-dim:   rgba(52,211,153,0.10);
+    --amber:       #FBBF24;
+    --amber-dim:   rgba(251,191,36,0.10);
+    --red:         #F87171;
+    --red-dim:     rgba(248,113,113,0.10);
+    --text-1:      rgba(255,255,255,0.92);
+    --text-2:      rgba(255,255,255,0.50);
+    --text-3:      rgba(255,255,255,0.25);
+    --font-ui:    'DM Sans', system-ui, sans-serif;
+    --font-mono:  'JetBrains Mono', monospace;
+    --r-sm: 6px; --r-md: 10px; --r-lg: 16px;
+    --t: 160ms cubic-bezier(0.4,0,0.2,1);
   }
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { height: 100%; background: var(--bg-base); color: var(--text-primary); font-family: var(--font-ui); font-size: 14px; line-height: 1.5; overflow: hidden; }
 
-  .app { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+  html, body { height: 100%; background: var(--canvas); color: var(--text-1); font-family: var(--font-ui); font-size: 14px; overflow: hidden; }
 
-  /* Topbar */
-  .topbar { flex-shrink:0; display:flex; align-items:center; justify-content:space-between; padding:0 24px; height:56px; background:var(--bg-surface); border-bottom:1px solid var(--border); z-index:100; }
-  .topbar-brand { display:flex; align-items:center; gap:10px; }
-  .topbar-icon { width:28px; height:28px; background:var(--accent); border-radius:var(--radius-sm); display:flex; align-items:center; justify-content:center; font-size:14px; }
-  .topbar-title { font-size:15px; font-weight:600; letter-spacing:-0.01em; }
-  .topbar-sub { font-size:12px; color:var(--text-muted); font-family:var(--font-mono); margin-left:4px; }
-  .topbar-actions { display:flex; gap:8px; align-items:center; }
+  /* ── CANVAS LAYER ─────────────────── */
+  #bg-canvas { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
 
-  /* Save indicator */
-  .save-dot { width:7px; height:7px; border-radius:50%; background:var(--text-muted); transition:background 300ms; flex-shrink:0; }
-  .save-dot.saving { background:var(--amber); }
-  .save-dot.saved  { background:var(--green); }
+  .app { position: relative; z-index: 1; display: flex; flex-direction: column; height: 100vh; }
 
-  /* Buttons */
-  .btn { display:inline-flex; align-items:center; gap:6px; padding:6px 14px; border-radius:var(--radius-sm); font-family:var(--font-ui); font-size:13px; font-weight:500; cursor:pointer; border:none; transition:var(--transition); white-space:nowrap; }
-  .btn-ghost { background:transparent; color:var(--text-secondary); border:1px solid var(--border); }
-  .btn-ghost:hover { background:var(--bg-elevated); color:var(--text-primary); border-color:var(--border-active); }
-  .btn-primary { background:var(--accent); color:#fff; border:1px solid transparent; }
-  .btn-primary:hover { background:#6B9FF8; }
+  /* ── TOPBAR ───────────────────────── */
+  .topbar {
+    flex-shrink: 0; height: 52px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 20px;
+    background: rgba(12,14,20,0.7);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--glass-border);
+  }
 
-  /* Main */
-  .main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+  .topbar-left { display: flex; align-items: center; gap: 12px; }
+  .topbar-brand { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; letter-spacing: -0.01em; }
+  .topbar-icon { width: 26px; height: 26px; background: var(--accent); border-radius: var(--r-sm); display: flex; align-items: center; justify-content: center; font-size: 13px; }
+  .topbar-sub { font-family: var(--font-mono); font-size: 11px; color: var(--text-3); }
 
-  /* Timeline */
-  .timeline-stage { flex-shrink:0; position:relative; height:140px; background:var(--bg-surface); border-bottom:1px solid var(--border); overflow-x:auto; overflow-y:visible; scrollbar-width:thin; scrollbar-color:var(--border) transparent; }
-  .timeline-stage::-webkit-scrollbar { height:4px; }
-  .timeline-stage::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
-  .timeline-inner { position:relative; height:100%; min-width:max-content; padding:0 60px; display:flex; align-items:center; }
-  .timeline-rail { position:absolute; top:50%; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent 0%,var(--border) 5%,var(--border) 95%,transparent 100%); transform:translateY(-50%); pointer-events:none; }
+  /* Timeline switcher */
+  .timeline-tabs {
+    display: flex; align-items: center; gap: 2px;
+    background: var(--glass); border: 1px solid var(--glass-border);
+    border-radius: var(--r-md); padding: 3px;
+  }
+  .timeline-tab {
+    padding: 4px 12px; border-radius: 7px; font-size: 12px; font-weight: 500;
+    cursor: pointer; border: none; background: transparent; color: var(--text-2);
+    transition: var(--t); white-space: nowrap;
+  }
+  .timeline-tab.active { background: var(--glass-active); color: var(--text-1); }
+  .timeline-tab:hover:not(.active) { background: var(--glass-hover); color: var(--text-1); }
+  .timeline-tab-add {
+    width: 26px; height: 26px; border-radius: 7px; border: none;
+    background: transparent; color: var(--text-3); font-size: 16px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: var(--t);
+  }
+  .timeline-tab-add:hover { background: var(--glass-hover); color: var(--accent); }
 
-  /* Milestone node */
-  .milestone-spacing { width:220px; display:flex; justify-content:center; align-items:center; flex-shrink:0; }
-  .milestone-node { position:relative; z-index:10; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:8px; }
-  .milestone-dot { width:14px; height:14px; border-radius:50%; border:2px solid var(--border-active); background:var(--bg-surface); transition:var(--transition); }
+  /* Actions */
+  .topbar-right { display: flex; align-items: center; gap: 6px; }
+  .save-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-3); transition: background 300ms; }
+  .save-dot.saving { background: var(--amber); }
+  .save-dot.saved  { background: var(--green); }
 
-  .milestone-node:hover .milestone-dot,
-  .milestone-node.active .milestone-dot { border-color:var(--accent); background:var(--accent); box-shadow:0 0 0 4px var(--accent-dim),0 0 12px var(--accent-glow); }
-  @keyframes pulse { 0%,100%{box-shadow:0 0 0 4px var(--accent-dim),0 0 12px var(--accent-glow)}50%{box-shadow:0 0 0 8px var(--accent-dim),0 0 20px var(--accent-glow)} }
-  .milestone-node.active .milestone-dot { animation:pulse 2.4s ease-in-out infinite; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 5px 12px; border-radius: var(--r-sm);
+    font-family: var(--font-ui); font-size: 12px; font-weight: 500;
+    cursor: pointer; border: none; transition: var(--t); white-space: nowrap;
+  }
+  .btn-ghost { background: var(--glass); color: var(--text-2); border: 1px solid var(--glass-border); }
+  .btn-ghost:hover { background: var(--glass-hover); color: var(--text-1); }
+  .btn-danger { background: var(--red-dim); color: var(--red); border: 1px solid rgba(248,113,113,0.2); }
+  .btn-danger:hover { background: rgba(248,113,113,0.18); }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: #6baaf8; }
 
-  /* Selected milestone */
-  .milestone-node.selected .milestone-dot { border-color:var(--purple); background:var(--purple); box-shadow:0 0 0 4px var(--purple-dim),0 0 12px rgba(167,139,250,0.25); animation:none; }
-  .milestone-node.selected .milestone-name { color:var(--text-primary); }
-  .milestone-node.selected .milestone-badge { background:var(--purple); color:#fff; border-color:transparent; }
+  /* ── MAIN ─────────────────────────── */
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
 
-  .milestone-label { text-align:center; user-select:none; }
-  .milestone-date { font-family:var(--font-mono); font-size:10px; color:var(--text-muted); letter-spacing:0.04em; margin-bottom:2px; }
-  .milestone-name { font-size:12px; font-weight:600; color:var(--text-secondary); transition:var(--transition); max-width:140px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .milestone-node:hover .milestone-name { color:var(--text-primary); }
-  .milestone-badge { font-size:10px; font-weight:500; padding:1px 6px; border-radius:20px; background:var(--accent-dim); color:var(--accent); border:1px solid rgba(79,142,247,0.2); }
-  .today-badge { font-size:9px; font-weight:600; text-transform:uppercase; letter-spacing:0.1em; background:var(--accent); color:#fff; padding:2px 5px; border-radius:3px; position:absolute; top:-22px; left:50%; transform:translateX(-50%); white-space:nowrap; }
+  /* ── TIMELINE RAIL ────────────────── */
+  .timeline-stage {
+    flex-shrink: 0; height: 130px;
+    overflow-x: auto; overflow-y: visible;
+    background: rgba(255,255,255,0.015);
+    border-bottom: 1px solid var(--glass-border);
+    scrollbar-width: none;
+  }
+  .timeline-stage::-webkit-scrollbar { display: none; }
+  .timeline-inner {
+    position: relative; height: 100%; min-width: max-content;
+    padding: 0 80px; display: flex; align-items: center;
+  }
 
-  /* Cards */
-  .cards-area { flex:1; overflow:auto; padding:20px 0; scrollbar-width:thin; scrollbar-color:var(--border) transparent; }
-  .cards-area::-webkit-scrollbar { width:6px; }
-  .cards-area::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
-  .cards-viewport { display:flex; gap:0; min-width:max-content; padding:0 60px; align-items:flex-start; }
+  /* gradient rail line */
+  .timeline-rail {
+    position: absolute; top: 50%; left: 0; right: 0;
+    height: 1px; transform: translateY(-50%); pointer-events: none;
+    background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(255,255,255,0.08) 8%,
+      rgba(255,255,255,0.08) 92%,
+      transparent 100%);
+  }
 
-  .milestone-col { width:220px; flex-shrink:0; display:flex; flex-direction:column; gap:10px; padding:0 8px; transition:opacity var(--transition); }
-  .milestone-col.dimmed { opacity:0.35; }
+  /* ── MILESTONE NODE ───────────────── */
+  .milestone-spacing { width: 220px; display: flex; justify-content: center; flex-shrink: 0; }
 
-  .col-section-label { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.1em; color:var(--text-muted); padding:0 2px; margin-bottom:2px; display:flex; align-items:center; gap:6px; }
-  .col-section-label::after { content:''; flex:1; height:1px; background:var(--border); }
+  .milestone-node {
+    position: relative; z-index: 10; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 7px;
+  }
 
-  .add-card-btn { display:flex; align-items:center; gap:6px; padding:7px 10px; border-radius:var(--radius-sm); border:1px dashed var(--border); background:transparent; color:var(--text-muted); font-family:var(--font-ui); font-size:12px; cursor:pointer; transition:var(--transition); width:100%; }
-  .add-card-btn:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-dim); }
+  .milestone-dot {
+    width: 12px; height: 12px; border-radius: 50%;
+    border: 1.5px solid rgba(255,255,255,0.2);
+    background: var(--canvas);
+    transition: var(--t);
+    box-shadow: 0 0 0 0 transparent;
+  }
+  .milestone-node:hover .milestone-dot { border-color: var(--accent); background: rgba(91,156,246,0.3); }
 
-  /* Card */
-  .card { background:var(--bg-elevated); border:1px solid var(--border); border-radius:var(--radius-md); overflow:hidden; transition:border-color var(--transition),box-shadow var(--transition); }
-  .card:hover { border-color:var(--border-active); box-shadow:var(--shadow-card); }
-  .card-header { display:flex; align-items:center; gap:8px; padding:10px 12px; cursor:pointer; user-select:none; }
-  .card-type-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
-  .card-type-idea .card-type-dot  { background:var(--purple); }
-  .card-type-task .card-type-dot  { background:var(--accent); }
-  .card-type-note .card-type-dot  { background:var(--amber); }
-  .card-type-risk .card-type-dot  { background:var(--red); }
-  .card-type-done .card-type-dot  { background:var(--green); }
-  .card-header-text { flex:1; font-size:13px; font-weight:500; color:var(--text-primary); line-height:1.3; }
-  .card-chevron { width:16px; height:16px; color:var(--text-muted); transition:transform var(--transition); flex-shrink:0; }
-  .card-chevron svg { width:100%; height:100%; }
-  .card.collapsed .card-chevron { transform:rotate(-90deg); }
-  .card-body { overflow:hidden; transition:max-height 260ms cubic-bezier(0.4,0,0.2,1),opacity 200ms ease; max-height:400px; }
-  .card.collapsed .card-body { max-height:0; opacity:0; }
-  .card-body-inner { padding:0 12px 12px; border-top:1px solid var(--border); padding-top:10px; }
-  .card-desc { font-family:var(--font-body); font-size:12.5px; color:var(--text-secondary); line-height:1.6; margin-bottom:8px; }
-  .checklist { list-style:none; display:flex; flex-direction:column; gap:5px; }
-  .checklist-item { display:flex; align-items:flex-start; gap:8px; font-family:var(--font-body); font-size:12px; color:var(--text-secondary); }
-  .checklist-item input[type="checkbox"] { width:14px; height:14px; accent-color:var(--accent); flex-shrink:0; margin-top:1px; cursor:pointer; }
-  .checklist-item.done span { text-decoration:line-through; color:var(--text-muted); }
-  .card-tags { display:flex; flex-wrap:wrap; gap:4px; margin-top:8px; }
-  .tag { font-size:10px; font-weight:500; padding:2px 7px; border-radius:20px; }
-  .tag-idea { background:var(--purple-dim); color:var(--purple); border:1px solid rgba(167,139,250,0.2); }
-  .tag-task { background:var(--accent-dim); color:var(--accent); border:1px solid rgba(79,142,247,0.2); }
-  .tag-note { background:var(--amber-dim); color:var(--amber); border:1px solid rgba(251,191,36,0.2); }
-  .tag-risk { background:rgba(248,113,113,0.1); color:var(--red); border:1px solid rgba(248,113,113,0.2); }
-  .tag-done { background:var(--green-dim); color:var(--green); border:1px solid rgba(52,211,153,0.2); }
-  .empty-hint { font-size:11px; color:var(--text-muted); font-style:italic; padding:4px 2px; }
+  .milestone-node.active .milestone-dot {
+    border-color: var(--accent); background: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-dim), 0 0 14px var(--accent-glow);
+    animation: pulse 2.6s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%,100% { box-shadow: 0 0 0 3px var(--accent-dim), 0 0 14px var(--accent-glow); }
+    50%      { box-shadow: 0 0 0 6px var(--accent-dim), 0 0 22px var(--accent-glow); }
+  }
+  .milestone-node.selected .milestone-dot {
+    border-color: var(--purple); background: var(--purple);
+    box-shadow: 0 0 0 3px var(--purple-dim), 0 0 14px rgba(167,139,250,0.3);
+    animation: none;
+  }
+  .milestone-node.selected .milestone-name { color: var(--text-1); }
+  .milestone-node.selected .milestone-badge { background: var(--purple); color: #fff; border-color: transparent; }
 
-  /* Modal */
-  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); z-index:200; display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity 200ms ease; }
-  .modal-overlay.open { opacity:1; pointer-events:all; }
-  .modal { background:var(--bg-surface); border:1px solid var(--border-active); border-radius:var(--radius-lg); width:420px; max-width:90vw; box-shadow:0 24px 64px rgba(0,0,0,0.6); transform:translateY(8px); transition:transform 200ms ease; }
-  .modal-overlay.open .modal { transform:translateY(0); }
-  .modal-header { padding:18px 20px 14px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
-  .modal-title { font-size:15px; font-weight:600; }
-  .modal-close { width:28px; height:28px; background:transparent; border:none; color:var(--text-muted); cursor:pointer; border-radius:var(--radius-sm); font-size:18px; display:flex; align-items:center; justify-content:center; transition:var(--transition); }
-  .modal-close:hover { background:var(--bg-elevated); color:var(--text-primary); }
-  .modal-body { padding:18px 20px; display:flex; flex-direction:column; gap:14px; }
-  .form-group { display:flex; flex-direction:column; gap:5px; }
-  .form-label { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-muted); }
-  .form-input, .form-select, .form-textarea { background:var(--bg-elevated); border:1px solid var(--border); border-radius:var(--radius-sm); padding:8px 11px; color:var(--text-primary); font-family:var(--font-ui); font-size:13px; outline:none; transition:border-color var(--transition); width:100%; }
-  .form-input:focus, .form-select:focus, .form-textarea:focus { border-color:var(--accent); box-shadow:0 0 0 2px var(--accent-dim); }
-  .form-textarea { resize:vertical; min-height:80px; line-height:1.5; }
-  .form-select option { background:var(--bg-elevated); }
-  .modal-footer { padding:14px 20px; border-top:1px solid var(--border); display:flex; gap:8px; justify-content:flex-end; }
+  .milestone-label { text-align: center; user-select: none; }
+  .milestone-date { font-family: var(--font-mono); font-size: 10px; color: var(--text-3); letter-spacing: 0.04em; margin-bottom: 2px; }
+  .milestone-name { font-size: 12px; font-weight: 600; color: var(--text-2); transition: var(--t); max-width: 140px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .milestone-node:hover .milestone-name { color: var(--text-1); }
+  .milestone-badge { font-size: 10px; font-weight: 500; padding: 1px 6px; border-radius: 20px; background: var(--accent-dim); color: var(--accent); border: 1px solid rgba(91,156,246,0.2); }
+  .today-badge { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; background: var(--accent); color: #fff; padding: 2px 5px; border-radius: 3px; position: absolute; top: -22px; left: 50%; transform: translateX(-50%); white-space: nowrap; }
 
-  /* Loading skeleton */
-  .skeleton { background:linear-gradient(90deg,var(--bg-elevated) 25%,var(--bg-hover) 50%,var(--bg-elevated) 75%); background-size:200% 100%; animation:shimmer 1.4s infinite; border-radius:var(--radius-sm); }
-  @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+  /* ── CARDS AREA ───────────────────── */
+  .cards-area { flex: 1; overflow: auto; padding: 24px 0; scrollbar-width: thin; scrollbar-color: var(--glass-active) transparent; }
+  .cards-area::-webkit-scrollbar { width: 4px; }
+  .cards-area::-webkit-scrollbar-thumb { background: var(--glass-active); border-radius: 2px; }
+  .cards-viewport { display: flex; min-width: max-content; padding: 0 80px; align-items: flex-start; }
 
-  @media (prefers-reduced-motion:reduce) { .milestone-node.active .milestone-dot{animation:none} *,*::before,*::after{transition:none!important} }
+  /* ── MILESTONE COLUMN ─────────────── */
+  .milestone-col { width: 220px; flex-shrink: 0; display: flex; flex-direction: column; gap: 8px; padding: 0 8px; transition: opacity var(--t); }
+  .milestone-col.dimmed { opacity: 0.25; }
+
+  .col-label {
+    font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em;
+    color: var(--text-3); padding: 0 2px; display: flex; align-items: center; gap: 6px;
+  }
+  .col-label::after { content:''; flex:1; height:1px; background: var(--glass-border); }
+
+  .add-btn {
+    display: flex; align-items: center; gap: 6px; padding: 6px 10px;
+    border-radius: var(--r-sm); border: 1px dashed var(--glass-border);
+    background: transparent; color: var(--text-3); font-family: var(--font-ui);
+    font-size: 11px; cursor: pointer; transition: var(--t); width: 100%;
+  }
+  .add-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+
+  /* ── CARD ─────────────────────────── */
+  .card {
+    background: var(--glass); border: 1px solid var(--glass-border);
+    border-radius: var(--r-md); overflow: hidden;
+    transition: border-color var(--t), box-shadow var(--t), background var(--t);
+    backdrop-filter: blur(6px);
+  }
+  .card:hover { background: var(--glass-hover); border-color: var(--glass-active); box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+  .card-header { display: flex; align-items: center; gap: 8px; padding: 9px 11px; cursor: pointer; user-select: none; }
+  .card-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .card-type-idea .card-dot  { background: var(--purple); }
+  .card-type-task .card-dot  { background: var(--accent); }
+  .card-type-note .card-dot  { background: var(--amber); }
+  .card-type-risk .card-dot  { background: var(--red); }
+  .card-type-done .card-dot  { background: var(--green); }
+  .card-title { flex: 1; font-size: 12.5px; font-weight: 500; color: var(--text-1); line-height: 1.3; }
+  .card-chevron { width: 14px; height: 14px; color: var(--text-3); transition: transform var(--t); flex-shrink: 0; }
+  .card-chevron svg { width: 100%; height: 100%; }
+  .card.collapsed .card-chevron { transform: rotate(-90deg); }
+  .card-body { overflow: hidden; transition: max-height 240ms cubic-bezier(0.4,0,0.2,1), opacity 180ms ease; max-height: 500px; }
+  .card.collapsed .card-body { max-height: 0; opacity: 0; }
+  .card-body-inner { padding: 0 11px 11px; border-top: 1px solid var(--glass-border); padding-top: 9px; }
+  .card-desc { font-size: 12px; color: var(--text-2); line-height: 1.6; margin-bottom: 8px; }
+  .checklist { list-style: none; display: flex; flex-direction: column; gap: 5px; }
+  .checklist-item { display: flex; align-items: flex-start; gap: 7px; font-size: 11.5px; color: var(--text-2); }
+  .checklist-item input[type="checkbox"] { width: 13px; height: 13px; accent-color: var(--accent); flex-shrink: 0; margin-top: 1px; cursor: pointer; }
+  .checklist-item.done span { text-decoration: line-through; color: var(--text-3); }
+  .card-tag { display: inline-flex; margin-top: 8px; font-size: 10px; font-weight: 500; padding: 2px 7px; border-radius: 20px; }
+  .tag-idea { background: var(--purple-dim); color: var(--purple); border: 1px solid rgba(167,139,250,0.2); }
+  .tag-task { background: var(--accent-dim); color: var(--accent); border: 1px solid rgba(91,156,246,0.2); }
+  .tag-note { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(251,191,36,0.2); }
+  .tag-risk { background: var(--red-dim); color: var(--red); border: 1px solid rgba(248,113,113,0.2); }
+  .empty-hint { font-size: 11px; color: var(--text-3); font-style: italic; }
+
+  /* ── MODAL ────────────────────────── */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); backdrop-filter: blur(8px); z-index: 200; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 180ms ease; }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal { background: rgba(18,21,32,0.95); border: 1px solid var(--glass-active); border-radius: var(--r-lg); width: 400px; max-width: 90vw; box-shadow: 0 32px 80px rgba(0,0,0,0.7); transform: translateY(10px) scale(0.98); transition: transform 180ms ease; }
+  .modal-overlay.open .modal { transform: translateY(0) scale(1); }
+  .modal-header { padding: 16px 18px 12px; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; }
+  .modal-title { font-size: 14px; font-weight: 600; }
+  .modal-close { width: 26px; height: 26px; background: transparent; border: none; color: var(--text-3); cursor: pointer; border-radius: var(--r-sm); font-size: 18px; display: flex; align-items: center; justify-content: center; transition: var(--t); }
+  .modal-close:hover { background: var(--glass-hover); color: var(--text-1); }
+  .modal-body { padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-3); }
+  .form-input, .form-select, .form-textarea { background: var(--glass); border: 1px solid var(--glass-border); border-radius: var(--r-sm); padding: 7px 10px; color: var(--text-1); font-family: var(--font-ui); font-size: 13px; outline: none; transition: border-color var(--t); width: 100%; }
+  .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-dim); }
+  .form-textarea { resize: vertical; min-height: 72px; line-height: 1.5; }
+  .form-select option { background: #12151f; }
+  .modal-footer { padding: 12px 18px; border-top: 1px solid var(--glass-border); display: flex; gap: 6px; justify-content: flex-end; }
+
+  /* ── CONFIRM DIALOG ───────────────── */
+  .confirm-box { background: rgba(18,21,32,0.97); border: 1px solid rgba(248,113,113,0.3); border-radius: var(--r-lg); padding: 24px; width: 340px; max-width: 90vw; text-align: center; box-shadow: 0 32px 80px rgba(0,0,0,0.7); transform: translateY(10px) scale(0.98); transition: transform 180ms ease; }
+  .modal-overlay.open .confirm-box { transform: translateY(0) scale(1); }
+  .confirm-icon { font-size: 28px; margin-bottom: 10px; }
+  .confirm-title { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+  .confirm-desc { font-size: 12.5px; color: var(--text-2); margin-bottom: 20px; line-height: 1.5; }
+  .confirm-actions { display: flex; gap: 8px; justify-content: center; }
+
+  @media (prefers-reduced-motion: reduce) { .milestone-node.active .milestone-dot { animation: none; } *, *::before, *::after { transition: none !important; } }
 </style>
 </head>
 <body>
+<canvas id="bg-canvas"></canvas>
 <div class="app">
+  <!-- Topbar -->
   <header class="topbar">
-    <div class="topbar-brand">
-      <div class="topbar-icon">🗓</div>
-      <span class="topbar-title">Timeline Planner</span>
-      <span class="topbar-sub" id="plan-range"></span>
+    <div class="topbar-left">
+      <div class="topbar-brand">
+        <div class="topbar-icon">🗓</div>
+        Timeline Planner
+      </div>
+      <div class="timeline-tabs" id="timeline-tabs">
+        <!-- tabs rendered by JS -->
+      </div>
     </div>
-    <div class="topbar-actions">
-      <div class="save-dot" id="save-dot" title="All changes saved"></div>
-      <button class="btn btn-ghost" onclick="toggleAll(false)">Expand all</button>
-      <button class="btn btn-ghost" onclick="toggleAll(true)">Collapse all</button>
+    <div class="topbar-right">
+      <div class="save-dot" id="save-dot" title="Saved"></div>
+      <button class="btn btn-ghost" onclick="toggleAll(false)">Expand</button>
+      <button class="btn btn-ghost" onclick="toggleAll(true)">Collapse</button>
+      <button class="btn btn-danger" onclick="openConfirmClear()" title="Clear current timeline">🗑 Clear</button>
       <button class="btn btn-primary" onclick="openAddMilestone()">＋ Milestone</button>
     </div>
   </header>
+
   <div class="main">
+    <!-- Timeline rail -->
     <div class="timeline-stage" id="timeline-stage">
       <div class="timeline-rail"></div>
       <div class="timeline-inner" id="timeline-inner"></div>
     </div>
+    <!-- Cards -->
     <div class="cards-area" id="cards-area">
       <div class="cards-viewport" id="cards-viewport"></div>
     </div>
@@ -225,9 +323,9 @@
       <button class="modal-close" onclick="closeMsModal()">×</button>
     </div>
     <div class="modal-body">
-      <div class="form-group"><label class="form-label">Milestone name</label><input class="form-input" id="ms-name" placeholder="e.g. Beta Launch"></div>
+      <div class="form-group"><label class="form-label">Name</label><input class="form-input" id="ms-name" placeholder="e.g. Beta Launch"></div>
       <div class="form-group"><label class="form-label">Date</label><input class="form-input" id="ms-date" type="date"></div>
-      <div class="form-group"><label class="form-label">Label (optional)</label><input class="form-input" id="ms-label" placeholder="e.g. v2.0, Q4 '26"></div>
+      <div class="form-group"><label class="form-label">Label (optional)</label><input class="form-input" id="ms-label" placeholder="e.g. v2.0"></div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeMsModal()">Cancel</button>
@@ -236,74 +334,154 @@
   </div>
 </div>
 
-<script>
-/* ─── State ─────────────────────────── */
-let milestones = [];
-let selectedMsId = null;
-let currentMilestoneId = null;
-let saveTimer = null;
-const TYPE_ICONS = { idea:'💡', task:'✅', note:'📝', risk:'⚠️', done:'✓' };
+<!-- New Timeline Modal -->
+<div class="modal-overlay" id="tl-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">New Timeline</span>
+      <button class="modal-close" onclick="closeTlModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Timeline name</label><input class="form-input" id="tl-name" placeholder="e.g. Q1 2027, Product Roadmap…"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeTlModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveTimeline()">Create timeline</button>
+    </div>
+  </div>
+</div>
 
-/* ─── API ────────────────────────────── */
-async function loadBoard() {
-  try {
-    const res = await fetch('/api/board');
-    const data = await res.json();
-    milestones = data.milestones || [];
-    render();
-  } catch(e) {
-    console.error('Load failed', e);
+<!-- Confirm Clear Modal -->
+<div class="modal-overlay" id="confirm-modal">
+  <div class="confirm-box">
+    <div class="confirm-icon">⚠️</div>
+    <div class="confirm-title" id="confirm-title">Clear this timeline?</div>
+    <div class="confirm-desc" id="confirm-desc">All milestones and cards will be permanently deleted. This cannot be undone.</div>
+    <div class="confirm-actions">
+      <button class="btn btn-ghost" onclick="closeConfirm()">Cancel</button>
+      <button class="btn btn-danger" id="confirm-ok-btn" onclick="confirmOk()">Delete everything</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── State ──────────────────────────── */
+let boards = {};          // { [id]: { name, milestones[] } }
+let activeBoard = null;   // current board id
+let selectedMsId = null;
+let currentMsId = null;   // for add-card modal
+let confirmCallback = null;
+let saveTimer = null;
+
+const TYPE_ICONS = { idea:'💡', task:'✅', note:'📝', risk:'⚠️' };
+const TODAY = new Date().toISOString().slice(0,10);
+
+/* ── Canvas background ──────────────── */
+(function initCanvas() {
+  const canvas = document.getElementById('bg-canvas');
+  const ctx = canvas.getContext('2d');
+  let W, H, dots;
+  function resize() {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+    dots = Array.from({length:55}, () => ({
+      x: Math.random()*W, y: Math.random()*H,
+      r: Math.random()*1.4+0.4,
+      vx: (Math.random()-0.5)*0.12, vy: (Math.random()-0.5)*0.12,
+      o: Math.random()*0.35+0.06
+    }));
   }
+  function draw() {
+    ctx.clearRect(0,0,W,H);
+    for (const d of dots) {
+      ctx.beginPath();
+      ctx.arc(d.x, d.y, d.r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(91,156,246,${d.o})`;
+      ctx.fill();
+      d.x += d.vx; d.y += d.vy;
+      if (d.x < 0) d.x = W; if (d.x > W) d.x = 0;
+      if (d.y < 0) d.y = H; if (d.y > H) d.y = 0;
+    }
+    requestAnimationFrame(draw);
+  }
+  window.addEventListener('resize', resize);
+  resize(); draw();
+})();
+
+/* ── API ────────────────────────────── */
+async function loadAll() {
+  const r = await fetch('/api/board');
+  const d = await r.json();
+  // Support both old format {milestones:[]} and new {boards:{}, activeBoard:''}
+  if (d.boards) {
+    boards = d.boards;
+    activeBoard = d.activeBoard || Object.keys(d.boards)[0];
+  } else {
+    // Migrate old format
+    const id = 'board-default';
+    boards = { [id]: { name: 'My Timeline', milestones: d.milestones || [] } };
+    activeBoard = id;
+  }
+  render();
 }
 
 function scheduleSave() {
   const dot = document.getElementById('save-dot');
   dot.className = 'save-dot saving';
-  dot.title = 'Saving…';
   clearTimeout(saveTimer);
   saveTimer = setTimeout(async () => {
     try {
       await fetch('/api/board', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ milestones })
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ boards, activeBoard })
       });
       dot.className = 'save-dot saved';
-      dot.title = 'All changes saved';
-      setTimeout(() => { dot.className = 'save-dot'; }, 2000);
-    } catch(e) {
-      dot.className = 'save-dot';
-      dot.style.background = 'var(--red)';
-      dot.title = 'Save failed';
-    }
-  }, 800);
+      setTimeout(() => dot.className = 'save-dot', 2000);
+    } catch { dot.className = 'save-dot'; }
+  }, 700);
 }
 
-/* ─── Render ─────────────────────────── */
-function render() {
-  renderTimeline();
-  renderCards();
-  updatePlanRange();
+function currentBoard() { return boards[activeBoard] || { name:'', milestones:[] }; }
+
+/* ── Render ─────────────────────────── */
+function render() { renderTabs(); renderTimeline(); renderCards(); updateSub(); }
+
+function renderTabs() {
+  const container = document.getElementById('timeline-tabs');
+  container.innerHTML = '';
+  Object.entries(boards).forEach(([id, b]) => {
+    const btn = document.createElement('button');
+    btn.className = 'timeline-tab' + (id === activeBoard ? ' active' : '');
+    btn.textContent = b.name;
+    btn.onclick = () => switchBoard(id);
+    container.appendChild(btn);
+  });
+  const addBtn = document.createElement('button');
+  addBtn.className = 'timeline-tab-add';
+  addBtn.title = 'New timeline';
+  addBtn.textContent = '+';
+  addBtn.onclick = openTlModal;
+  container.appendChild(addBtn);
 }
 
 function renderTimeline() {
   const inner = document.getElementById('timeline-inner');
   inner.innerHTML = '';
-  milestones.forEach(ms => {
-    const isActive = ms.isToday;
+  currentBoard().milestones.forEach(ms => {
+    const isActive = ms.date === TODAY;
     const isSelected = ms.id === selectedMsId;
     const wrap = document.createElement('div');
     wrap.className = 'milestone-spacing';
     const node = document.createElement('div');
-    node.className = 'milestone-node' + (isActive ? ' active' : '') + (isSelected ? ' selected' : '');
+    node.className = 'milestone-node' + (isActive ? ' active':'') + (isSelected ? ' selected':'');
     node.onclick = () => selectMilestone(ms.id);
     node.innerHTML = `
       ${isActive ? '<span class="today-badge">TODAY</span>' : ''}
       <div class="milestone-dot"></div>
       <div class="milestone-label">
-        <div class="milestone-date">${formatDate(ms.date)}</div>
-        <div class="milestone-name">${escapeHtml(ms.name)}</div>
-        ${ms.label ? `<span class="milestone-badge">${escapeHtml(ms.label)}</span>` : ''}
+        <div class="milestone-date">${fmtDate(ms.date)}</div>
+        <div class="milestone-name">${esc(ms.name)}</div>
+        ${ms.label ? `<span class="milestone-badge">${esc(ms.label)}</span>` : ''}
       </div>`;
     wrap.appendChild(node);
     inner.appendChild(wrap);
@@ -311,9 +489,9 @@ function renderTimeline() {
 }
 
 function renderCards() {
-  const viewport = document.getElementById('cards-viewport');
-  viewport.innerHTML = '';
-  milestones.forEach(ms => {
+  const vp = document.getElementById('cards-viewport');
+  vp.innerHTML = '';
+  currentBoard().milestones.forEach(ms => {
     const isSelected = ms.id === selectedMsId;
     const isDimmed = selectedMsId && !isSelected;
     const col = document.createElement('div');
@@ -321,203 +499,189 @@ function renderCards() {
     col.setAttribute('data-id', ms.id);
     const ideas = ms.cards.filter(c => c.type === 'idea');
     const tasks  = ms.cards.filter(c => c.type !== 'idea');
-    if (ideas.length > 0) {
-      col.innerHTML += `<div class="col-section-label">Ideas</div>`;
-      ideas.forEach(c => col.appendChild(buildCard(c, ms.id)));
-    }
-    col.innerHTML += `<button class="add-card-btn" onclick="openAddCard('${ms.id}','idea')">＋ idea</button>`;
-    if (tasks.length > 0) {
-      col.innerHTML += `<div class="col-section-label" style="margin-top:6px">Tasks & Notes</div>`;
-      tasks.forEach(c => col.appendChild(buildCard(c, ms.id)));
-    }
-    col.innerHTML += `<button class="add-card-btn" onclick="openAddCard('${ms.id}','task')">＋ task / note</button>`;
-    viewport.appendChild(col);
+    if (ideas.length) { col.innerHTML += `<div class="col-label">Ideas</div>`; ideas.forEach(c => col.appendChild(buildCard(c, ms.id))); }
+    col.innerHTML += `<button class="add-btn" onclick="openAddCard('${ms.id}','idea')">＋ idea</button>`;
+    if (tasks.length) { col.innerHTML += `<div class="col-label" style="margin-top:4px">Tasks & Notes</div>`; tasks.forEach(c => col.appendChild(buildCard(c, ms.id))); }
+    col.innerHTML += `<button class="add-btn" onclick="openAddCard('${ms.id}','task')">＋ task / note</button>`;
+    vp.appendChild(col);
   });
 }
 
 function buildCard(card, msId) {
   const el = document.createElement('div');
-  el.className = `card card-type-${card.type}${card.collapsed ? ' collapsed' : ''}`;
+  el.className = `card card-type-${card.type}${card.collapsed?' collapsed':''}`;
   el.setAttribute('data-card-id', card.id);
-  const hasTasks = card.tasks && card.tasks.length > 0;
-  const doneCount = hasTasks ? card.tasks.filter(t => t.done).length : 0;
-  const taskSummary = hasTasks ? ` <span style="font-size:10px;color:var(--text-muted);margin-left:4px;">${doneCount}/${card.tasks.length}</span>` : '';
-  let bodyContent = '';
-  if (card.desc) bodyContent += `<p class="card-desc">${escapeHtml(card.desc)}</p>`;
+  const hasTasks = card.tasks?.length > 0;
+  const doneCount = hasTasks ? card.tasks.filter(t=>t.done).length : 0;
+  const taskSum = hasTasks ? ` <span style="font-size:10px;color:var(--text-3);margin-left:3px">${doneCount}/${card.tasks.length}</span>` : '';
+  let body = '';
+  if (card.desc) body += `<p class="card-desc">${esc(card.desc)}</p>`;
   if (hasTasks) {
-    bodyContent += `<ul class="checklist">`;
-    card.tasks.forEach((t, ti) => {
-      bodyContent += `<li class="checklist-item${t.done?' done':''}"><input type="checkbox" ${t.done?'checked':''} onchange="toggleTask('${card.id}',${ti},'${msId}',this.checked)"><span>${escapeHtml(t.text)}</span></li>`;
-    });
-    bodyContent += `</ul>`;
+    body += '<ul class="checklist">';
+    card.tasks.forEach((t,ti) => { body += `<li class="checklist-item${t.done?' done':''}"><input type="checkbox" ${t.done?'checked':''} onchange="toggleTask('${card.id}',${ti},'${msId}',this.checked)"><span>${esc(t.text)}</span></li>`; });
+    body += '</ul>';
   }
-  if (!card.desc && !hasTasks) bodyContent += `<span class="empty-hint">No detail yet.</span>`;
+  if (!card.desc && !hasTasks) body += `<span class="empty-hint">No detail yet.</span>`;
   el.innerHTML = `
     <div class="card-header" onclick="toggleCard('${card.id}','${msId}')">
-      <div class="card-type-dot"></div>
-      <span class="card-header-text">${escapeHtml(card.title)}${taskSummary}</span>
+      <div class="card-dot"></div>
+      <span class="card-title">${esc(card.title)}${taskSum}</span>
       <span class="card-chevron"><svg viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
     </div>
     <div class="card-body"><div class="card-body-inner">
-      ${bodyContent}
-      <div class="card-tags"><span class="tag tag-${card.type}">${TYPE_ICONS[card.type]} ${card.type}</span></div>
+      ${body}
+      <span class="card-tag tag-${card.type}">${TYPE_ICONS[card.type]||''} ${card.type}</span>
     </div></div>`;
   return el;
 }
 
-/* ─── Selection ──────────────────────── */
+function updateSub() {
+  const ms = currentBoard().milestones;
+  if (!ms.length) return;
+  const fmt = s => new Date(s+'T12:00:00').toLocaleDateString('en-GB',{month:'short',year:'numeric'});
+  document.querySelector('.topbar-sub').textContent = ms.length ? `${fmt(ms[0].date)} → ${fmt(ms[ms.length-1].date)}` : '';
+}
+
+/* ── Selection ──────────────────────── */
 function selectMilestone(msId) {
-  const ms = milestones.find(m => m.id === msId);
+  const b = currentBoard();
+  const ms = b.milestones.find(m => m.id === msId);
   if (!ms) return;
-
   if (selectedMsId === msId) {
-    // Deselect: collapse all cards and clear selection
     selectedMsId = null;
-    ms.cards.forEach(c => { c.collapsed = true; });
+    ms.cards.forEach(c => c.collapsed = true);
   } else {
-    // Deselect previous
-    if (selectedMsId) {
-      const prev = milestones.find(m => m.id === selectedMsId);
-      if (prev) prev.cards.forEach(c => { c.collapsed = true; });
-    }
+    if (selectedMsId) { const prev = b.milestones.find(m=>m.id===selectedMsId); if(prev) prev.cards.forEach(c=>c.collapsed=true); }
     selectedMsId = msId;
-    // Expand all cards for selected
-    ms.cards.forEach(c => { c.collapsed = false; });
+    ms.cards.forEach(c => c.collapsed = false);
   }
-
   render();
-  if (selectedMsId) {
-    setTimeout(() => {
-      const col = document.querySelector(`#cards-viewport [data-id="${msId}"]`);
-      if (col) col.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-    }, 50);
-  }
+  if (selectedMsId) setTimeout(() => document.querySelector(`#cards-viewport [data-id="${msId}"]`)?.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'}), 40);
   scheduleSave();
 }
 
-/* ─── Card interactions ──────────────── */
+/* ── Card interactions ──────────────── */
 function toggleCard(cardId, msId) {
-  const ms = milestones.find(m => m.id === msId);
-  const card = ms?.cards.find(c => c.id === cardId);
+  const card = currentBoard().milestones.find(m=>m.id===msId)?.cards.find(c=>c.id===cardId);
   if (!card) return;
   card.collapsed = !card.collapsed;
-  const el = document.querySelector(`[data-card-id="${cardId}"]`);
-  if (el) el.classList.toggle('collapsed', card.collapsed);
+  document.querySelector(`[data-card-id="${cardId}"]`)?.classList.toggle('collapsed', card.collapsed);
   scheduleSave();
 }
 
 function toggleAll(collapse) {
-  milestones.forEach(ms => ms.cards.forEach(c => c.collapsed = collapse));
-  selectedMsId = null;
-  render();
-  scheduleSave();
+  currentBoard().milestones.forEach(ms => ms.cards.forEach(c => c.collapsed = collapse));
+  selectedMsId = null; render(); scheduleSave();
 }
 
-function toggleTask(cardId, taskIndex, msId, checked) {
-  const ms = milestones.find(m => m.id === msId);
-  const card = ms?.cards.find(c => c.id === cardId);
+function toggleTask(cardId, ti, msId, checked) {
+  const card = currentBoard().milestones.find(m=>m.id===msId)?.cards.find(c=>c.id===cardId);
   if (!card) return;
-  card.tasks[taskIndex].done = checked;
-  const el = document.querySelector(`[data-card-id="${cardId}"] .card-header-text`);
-  if (el) {
-    const doneCount = card.tasks.filter(t => t.done).length;
-    el.innerHTML = `${escapeHtml(card.title)} <span style="font-size:10px;color:var(--text-muted);margin-left:4px;">${doneCount}/${card.tasks.length}</span>`;
-  }
-  const li = document.querySelectorAll(`[data-card-id="${cardId}"] .checklist-item`)[taskIndex];
-  if (li) li.classList.toggle('done', checked);
+  card.tasks[ti].done = checked;
+  const el = document.querySelector(`[data-card-id="${cardId}"] .card-title`);
+  if (el) { const d = card.tasks.filter(t=>t.done).length; el.innerHTML = `${esc(card.title)} <span style="font-size:10px;color:var(--text-3);margin-left:3px">${d}/${card.tasks.length}</span>`; }
+  document.querySelectorAll(`[data-card-id="${cardId}"] .checklist-item`)[ti]?.classList.toggle('done', checked);
   scheduleSave();
 }
 
-/* ─── Add Card ───────────────────────── */
-function openAddCard(msId, defaultType = 'idea') {
-  currentMilestoneId = msId;
-  const ms = milestones.find(m => m.id === msId);
+/* ── Add card ───────────────────────── */
+function openAddCard(msId, type='idea') {
+  currentMsId = msId;
+  const ms = currentBoard().milestones.find(m=>m.id===msId);
   document.getElementById('card-modal-title').textContent = `Add to "${ms?.name}"`;
   document.getElementById('card-title').value = '';
   document.getElementById('card-desc').value = '';
-  document.getElementById('card-type').value = defaultType;
+  document.getElementById('card-type').value = type;
   document.getElementById('card-modal').classList.add('open');
-  setTimeout(() => document.getElementById('card-title').focus(), 60);
+  setTimeout(() => document.getElementById('card-title').focus(), 50);
 }
-function closeCardModal() { document.getElementById('card-modal').classList.remove('open'); currentMilestoneId = null; }
+function closeCardModal() { document.getElementById('card-modal').classList.remove('open'); currentMsId = null; }
 function saveCard() {
   const title = document.getElementById('card-title').value.trim();
   if (!title) { document.getElementById('card-title').focus(); return; }
-  const ms = milestones.find(m => m.id === currentMilestoneId);
+  const ms = currentBoard().milestones.find(m=>m.id===currentMsId);
   if (!ms) return;
-  ms.cards.push({ id: 'c' + Date.now(), type: document.getElementById('card-type').value, title, desc: document.getElementById('card-desc').value.trim(), tasks: [], collapsed: false });
-  closeCardModal();
-  render();
-  scheduleSave();
+  ms.cards.push({ id:'c'+Date.now(), type: document.getElementById('card-type').value, title, desc: document.getElementById('card-desc').value.trim(), tasks:[], collapsed:false });
+  closeCardModal(); render(); scheduleSave();
 }
 
-/* ─── Add Milestone ──────────────────── */
+/* ── Add milestone ──────────────────── */
 function openAddMilestone() {
-  document.getElementById('ms-date').value = new Date().toISOString().slice(0,10);
+  document.getElementById('ms-date').value = TODAY;
   document.getElementById('ms-name').value = '';
   document.getElementById('ms-label').value = '';
   document.getElementById('ms-modal').classList.add('open');
-  setTimeout(() => document.getElementById('ms-name').focus(), 60);
+  setTimeout(() => document.getElementById('ms-name').focus(), 50);
 }
 function closeMsModal() { document.getElementById('ms-modal').classList.remove('open'); }
 function saveMilestone() {
   const name = document.getElementById('ms-name').value.trim();
   if (!name) { document.getElementById('ms-name').focus(); return; }
-  const dateVal = document.getElementById('ms-date').value;
-  const today = new Date().toISOString().slice(0,10);
-  milestones.push({ id: 'm' + Date.now(), name, date: dateVal || today, label: document.getElementById('ms-label').value.trim(), isToday: dateVal === today, cards: [] });
-  milestones.sort((a, b) => a.date.localeCompare(b.date));
-  closeMsModal();
-  render();
-  scheduleSave();
+  const dateVal = document.getElementById('ms-date').value || TODAY;
+  currentBoard().milestones.push({ id:'m'+Date.now(), name, date: dateVal, label: document.getElementById('ms-label').value.trim(), isToday: dateVal===TODAY, cards:[] });
+  currentBoard().milestones.sort((a,b) => a.date.localeCompare(b.date));
+  closeMsModal(); render(); scheduleSave();
 }
 
-/* ─── Scroll sync ────────────────────── */
+/* ── Timeline management ────────────── */
+function switchBoard(id) { activeBoard = id; selectedMsId = null; render(); scheduleSave(); }
+
+function openTlModal() {
+  document.getElementById('tl-name').value = '';
+  document.getElementById('tl-modal').classList.add('open');
+  setTimeout(() => document.getElementById('tl-name').focus(), 50);
+}
+function closeTlModal() { document.getElementById('tl-modal').classList.remove('open'); }
+function saveTimeline() {
+  const name = document.getElementById('tl-name').value.trim();
+  if (!name) { document.getElementById('tl-name').focus(); return; }
+  const id = 'board-' + Date.now();
+  boards[id] = { name, milestones: [] };
+  activeBoard = id;
+  selectedMsId = null;
+  closeTlModal(); render(); scheduleSave();
+}
+
+/* ── Clear / confirm ────────────────── */
+function openConfirmClear() {
+  const name = currentBoard().name;
+  document.getElementById('confirm-title').textContent = `Clear "${name}"?`;
+  document.getElementById('confirm-desc').textContent = 'All milestones and cards will be permanently deleted. This cannot be undone.';
+  document.getElementById('confirm-ok-btn').textContent = 'Delete everything';
+  confirmCallback = () => {
+    boards[activeBoard].milestones = [];
+    selectedMsId = null; render(); scheduleSave();
+  };
+  document.getElementById('confirm-modal').classList.add('open');
+}
+function closeConfirm() { document.getElementById('confirm-modal').classList.remove('open'); confirmCallback = null; }
+function confirmOk() { closeConfirm(); confirmCallback?.(); }
+
+/* ── Scroll sync ────────────────────── */
 function syncScroll() {
   const stage = document.getElementById('timeline-stage');
-  const cardsArea = document.getElementById('cards-area');
+  const area  = document.getElementById('cards-area');
   const inner = document.getElementById('timeline-inner');
-  const viewport = document.getElementById('cards-viewport');
-  let stageLock = false, cardsLock = false;
-  stage.addEventListener('scroll', () => {
-    if (cardsLock) return;
-    stageLock = true;
-    const ratio = stage.scrollLeft / (inner.scrollWidth - stage.clientWidth || 1);
-    cardsArea.scrollLeft = ratio * (viewport.scrollWidth - cardsArea.clientWidth);
-    requestAnimationFrame(() => stageLock = false);
-  });
-  cardsArea.addEventListener('scroll', () => {
-    if (stageLock) return;
-    cardsLock = true;
-    const ratio = cardsArea.scrollLeft / (viewport.scrollWidth - cardsArea.clientWidth || 1);
-    stage.scrollLeft = ratio * (inner.scrollWidth - stage.clientWidth);
-    requestAnimationFrame(() => cardsLock = false);
-  });
+  const vp    = document.getElementById('cards-viewport');
+  let sl = false, cl = false;
+  stage.addEventListener('scroll', () => { if(cl) return; sl=true; const r=stage.scrollLeft/(inner.scrollWidth-stage.clientWidth||1); area.scrollLeft=r*(vp.scrollWidth-area.clientWidth); requestAnimationFrame(()=>sl=false); });
+  area.addEventListener('scroll',  () => { if(sl) return; cl=true; const r=area.scrollLeft/(vp.scrollWidth-area.clientWidth||1); stage.scrollLeft=r*(inner.scrollWidth-stage.clientWidth); requestAnimationFrame(()=>cl=false); });
 }
 
-/* ─── Keyboard ───────────────────────── */
+/* ── Keyboard ───────────────────────── */
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closeCardModal(); closeMsModal(); }
+  if (e.key === 'Escape') { closeCardModal(); closeMsModal(); closeTlModal(); closeConfirm(); }
 });
-document.getElementById('card-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeCardModal(); });
-document.getElementById('ms-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeMsModal(); });
+['card-modal','ms-modal','tl-modal','confirm-modal'].forEach(id => {
+  document.getElementById(id).addEventListener('click', e => { if (e.target === e.currentTarget) { closeCardModal(); closeMsModal(); closeTlModal(); closeConfirm(); } });
+});
 
-/* ─── Utils ──────────────────────────── */
-function formatDate(dateStr) {
-  const d = new Date(dateStr + 'T12:00:00');
-  return d.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'2-digit' });
-}
-function escapeHtml(s) {
-  return s?.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') ?? '';
-}
-function updatePlanRange() {
-  if (!milestones.length) return;
-  const fmt = s => new Date(s + 'T12:00:00').toLocaleDateString('en-GB', { month:'short', year:'numeric' });
-  document.getElementById('plan-range').textContent = `${fmt(milestones[0].date)} → ${fmt(milestones[milestones.length-1].date)}`;
-}
+/* ── Utils ──────────────────────────── */
+function fmtDate(s) { return new Date(s+'T12:00:00').toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'2-digit'}); }
+function esc(s) { return s?.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') ?? ''; }
 
-/* ─── Init ───────────────────────────── */
-loadBoard();
+/* ── Init ───────────────────────────── */
+loadAll();
 syncScroll();
 </script>
 </body>

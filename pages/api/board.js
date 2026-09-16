@@ -72,7 +72,8 @@ export default async function handler(req, res) {
 
     if (req.method === 'POST') {
       const body = req.body;
-      if (!body || !Array.isArray(body.milestones)) {
+      // Accept both legacy {milestones:[]} and new {boards:{}, activeBoard:''}
+      if (!body || (!Array.isArray(body.milestones) && !body.boards)) {
         return res.status(400).json({ error: 'Invalid body' });
       }
       await client.query(`
