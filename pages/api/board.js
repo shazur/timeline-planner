@@ -1,6 +1,6 @@
-import { kv } from '@vercel/kv';
+import { Pool } from 'pg';
 
-const KEY = 'timeline:board';
+const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
 
 const DEFAULT_DATA = {
   milestones: [
@@ -16,7 +16,7 @@ const DEFAULT_DATA = {
       cards: [
         { id: 'c3', type: 'idea', title: 'Onboarding redesign', desc: 'Explore a progress-bar-first onboarding flow.', tasks: [], collapsed: false },
         { id: 'c4', type: 'task', title: 'Ship dashboard v1', desc: 'Core charts, filters, and export are in scope.', tasks: [{ text: 'Finalize data model', done: true }, { text: 'Build chart components', done: true }, { text: 'Add export to CSV', done: false }, { text: 'QA on mobile', done: false }], collapsed: false },
-        { id: 'c5', type: 'risk', title: 'API rate limits under load', desc: 'Third-party API caps at 1000 req/min. Peak traffic could exceed this by 3×.', tasks: [], collapsed: true }
+        { id: 'c5', type: 'risk', title: 'API rate limits under load', desc: 'Third-party API caps at 1000 req/min. Peak could exceed 3x.', tasks: [], collapsed: true }
       ]
     },
     {
@@ -29,8 +29,8 @@ const DEFAULT_DATA = {
     {
       id: 'm4', name: 'Launch', date: '2026-11-20', label: 'v1.0', isToday: false,
       cards: [
-        { id: 'c8', type: 'idea', title: 'Product Hunt launch strategy', desc: 'Coordinate hunter, supporter mobilization, and timing for a top-5 finish.', tasks: [], collapsed: true },
-        { id: 'c9', type: 'note', title: 'Press & announcement copy', desc: 'Prepare blog post, social assets, and press kit one week before launch day.', tasks: [], collapsed: false }
+        { id: 'c8', type: 'idea', title: 'Product Hunt launch strategy', desc: 'Coordinate hunter, supporter mobilization, and timing.', tasks: [], collapsed: true },
+        { id: 'c9', type: 'note', title: 'Press & announcement copy', desc: 'Prepare blog post, social assets, and press kit one week before.', tasks: [], collapsed: false }
       ]
     },
     {
@@ -42,26 +42,52 @@ const DEFAULT_DATA = {
   ]
 };
 
+async function getDb() {
+  const client = await pool.connect();
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS timeline_board (
+      id TEXT PRIMARY KEY,
+      data JSONB NOT NULL,
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `);
+  return client;
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  if (req.method === 'GET') {
-    const data = await kv.get(KEY);
-    return res.status(200).json(data ?? DEFAULT_DATA);
-  }
+  let client;
+  try {
+    client = await getDb();
 
-  if (req.method === 'POST') {
-    const body = req.body;
-    if (!body || !Array.isArray(body.milestones)) {
-      return res.status(400).json({ error: 'Invalid body' });
+    if (req.method === 'GET') {
+      const result = await client.query(`SELECT data FROM timeline_board WHERE id = 'default'`);
+      const data = result.rows[0]?.data ?? DEFAULT_DATA;
+      return res.status(200).json(data);
     }
-    await kv.set(KEY, body);
-    return res.status(200).json({ ok: true });
-  }
 
-  res.status(405).json({ error: 'Method not allowed' });
+    if (req.method === 'POST') {
+      const body = req.body;
+      if (!body || !Array.isArray(body.milestones)) {
+        return res.status(400).json({ error: 'Invalid body' });
+      }
+      await client.query(`
+        INSERT INTO timeline_board (id, data, updated_at)
+        VALUES ('default', $1, NOW())
+        ON CONFLICT (id) DO UPDATE SET data = $1, updated_at = NOW()
+      `, [body]);
+      return res.status(200).json({ ok: true });
+    }
+
+    res.status(405).json({ error: 'Method not allowed' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  } finally {
+    client?.release();
+  }
 }
