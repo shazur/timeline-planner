@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Timeline Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-base:       #0F1117;
+    --bg-surface:    #1A1D27;
+    --bg-elevated:   #21253A;
+    --bg-hover:      #262B40;
+    --border:        #2A2D3E;
+    --border-active: #3D4260;
+    --accent:        #4F8EF7;
+    --accent-glow:   rgba(79,142,247,0.18);
+    --accent-dim:    rgba(79,142,247,0.12);
+    --purple:        #A78BFA;
+    --purple-dim:    rgba(167,139,250,0.12);
+    --green:         #34D399;
+    --green-dim:     rgba(52,211,153,0.12);
+    --amber:         #FBBF24;
+    --amber-dim:     rgba(251,191,36,0.12);
+    --red:           #F87171;
+    --text-primary:  #E8EAF0;
+    --text-secondary:#9095A8;
+    --text-muted:    #5A6078;
+    --font-ui:       'DM Sans', system-ui, sans-serif;
+    --font-body:     'Inter', system-ui, sans-serif;
+    --font-mono:     'JetBrains Mono', monospace;
+    --radius-sm:     6px;
+    --radius-md:     10px;
+    --radius-lg:     14px;
+    --shadow-card:   0 2px 12px rgba(0,0,0,0.4);
+    --transition:    180ms cubic-bezier(0.4,0,0.2,1);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: var(--bg-base); color: var(--text-primary); font-family: var(--font-ui); font-size: 14px; line-height: 1.5; overflow: hidden; }
+
+  .app { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+  /* Topbar */
+  .topbar { flex-shrink:0; display:flex; align-items:center; justify-content:space-between; padding:0 24px; height:56px; background:var(--bg-surface); border-bottom:1px solid var(--border); z-index:100; }
+  .topbar-brand { display:flex; align-items:center; gap:10px; }
+  .topbar-icon { width:28px; height:28px; background:var(--accent); border-radius:var(--radius-sm); display:flex; align-items:center; justify-content:center; font-size:14px; }
+  .topbar-title { font-size:15px; font-weight:600; letter-spacing:-0.01em; }
+  .topbar-sub { font-size:12px; color:var(--text-muted); font-family:var(--font-mono); margin-left:4px; }
+  .topbar-actions { display:flex; gap:8px; align-items:center; }
+
+  /* Save indicator */
+  .save-dot { width:7px; height:7px; border-radius:50%; background:var(--text-muted); transition:background 300ms; flex-shrink:0; }
+  .save-dot.saving { background:var(--amber); }
+  .save-dot.saved  { background:var(--green); }
+
+  /* Buttons */
+  .btn { display:inline-flex; align-items:center; gap:6px; padding:6px 14px; border-radius:var(--radius-sm); font-family:var(--font-ui); font-size:13px; font-weight:500; cursor:pointer; border:none; transition:var(--transition); white-space:nowrap; }
+  .btn-ghost { background:transparent; color:var(--text-secondary); border:1px solid var(--border); }
+  .btn-ghost:hover { background:var(--bg-elevated); color:var(--text-primary); border-color:var(--border-active); }
+  .btn-primary { background:var(--accent); color:#fff; border:1px solid transparent; }
+  .btn-primary:hover { background:#6B9FF8; }
+
+  /* Main */
+  .main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+
+  /* Timeline */
+  .timeline-stage { flex-shrink:0; position:relative; height:140px; background:var(--bg-surface); border-bottom:1px solid var(--border); overflow-x:auto; overflow-y:visible; scrollbar-width:thin; scrollbar-color:var(--border) transparent; }
+  .timeline-stage::-webkit-scrollbar { height:4px; }
+  .timeline-stage::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+  .timeline-inner { position:relative; height:100%; min-width:max-content; padding:0 60px; display:flex; align-items:center; }
+  .timeline-rail { position:absolute; top:50%; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent 0%,var(--border) 5%,var(--border) 95%,transparent 100%); transform:translateY(-50%); pointer-events:none; }
+
+  /* Milestone node */
+  .milestone-spacing { width:220px; display:flex; justify-content:center; align-items:center; flex-shrink:0; }
+  .milestone-node { position:relative; z-index:10; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:8px; }
+  .milestone-dot { width:14px; height:14px; border-radius:50%; border:2px solid var(--border-active); background:var(--bg-surface); transition:var(--transition); }
+
+  .milestone-node:hover .milestone-dot,
+  .milestone-node.active .milestone-dot { border-color:var(--accent); background:var(--accent); box-shadow:0 0 0 4px var(--accent-dim),0 0 12px var(--accent-glow); }
+  @keyframes pulse { 0%,100%{box-shadow:0 0 0 4px var(--accent-dim),0 0 12px var(--accent-glow)}50%{box-shadow:0 0 0 8px var(--accent-dim),0 0 20px var(--accent-glow)} }
+  .milestone-node.active .milestone-dot { animation:pulse 2.4s ease-in-out infinite; }
+
+  /* Selected milestone */
+  .milestone-node.selected .milestone-dot { border-color:var(--purple); background:var(--purple); box-shadow:0 0 0 4px var(--purple-dim),0 0 12px rgba(167,139,250,0.25); animation:none; }
+  .milestone-node.selected .milestone-name { color:var(--text-primary); }
+  .milestone-node.selected .milestone-badge { background:var(--purple); color:#fff; border-color:transparent; }
+
+  .milestone-label { text-align:center; user-select:none; }
+  .milestone-date { font-family:var(--font-mono); font-size:10px; color:var(--text-muted); letter-spacing:0.04em; margin-bottom:2px; }
+  .milestone-name { font-size:12px; font-weight:600; color:var(--text-secondary); transition:var(--transition); max-width:140px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .milestone-node:hover .milestone-name { color:var(--text-primary); }
+  .milestone-badge { font-size:10px; font-weight:500; padding:1px 6px; border-radius:20px; background:var(--accent-dim); color:var(--accent); border:1px solid rgba(79,142,247,0.2); }
+  .today-badge { font-size:9px; font-weight:600; text-transform:uppercase; letter-spacing:0.1em; background:var(--accent); color:#fff; padding:2px 5px; border-radius:3px; position:absolute; top:-22px; left:50%; transform:translateX(-50%); white-space:nowrap; }
+
+  /* Cards */
+  .cards-area { flex:1; overflow:auto; padding:20px 0; scrollbar-width:thin; scrollbar-color:var(--border) transparent; }
+  .cards-area::-webkit-scrollbar { width:6px; }
+  .cards-area::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+  .cards-viewport { display:flex; gap:0; min-width:max-content; padding:0 60px; align-items:flex-start; }
+
+  .milestone-col { width:220px; flex-shrink:0; display:flex; flex-direction:column; gap:10px; padding:0 8px; transition:opacity var(--transition); }
+  .milestone-col.dimmed { opacity:0.35; }
+
+  .col-section-label { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.1em; color:var(--text-muted); padding:0 2px; margin-bottom:2px; display:flex; align-items:center; gap:6px; }
+  .col-section-label::after { content:''; flex:1; height:1px; background:var(--border); }
+
+  .add-card-btn { display:flex; align-items:center; gap:6px; padding:7px 10px; border-radius:var(--radius-sm); border:1px dashed var(--border); background:transparent; color:var(--text-muted); font-family:var(--font-ui); font-size:12px; cursor:pointer; transition:var(--transition); width:100%; }
+  .add-card-btn:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-dim); }
+
+  /* Card */
+  .card { background:var(--bg-elevated); border:1px solid var(--border); border-radius:var(--radius-md); overflow:hidden; transition:border-color var(--transition),box-shadow var(--transition); }
+  .card:hover { border-color:var(--border-active); box-shadow:var(--shadow-card); }
+  .card-header { display:flex; align-items:center; gap:8px; padding:10px 12px; cursor:pointer; user-select:none; }
+  .card-type-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  .card-type-idea .card-type-dot  { background:var(--purple); }
+  .card-type-task .card-type-dot  { background:var(--accent); }
+  .card-type-note .card-type-dot  { background:var(--amber); }
+  .card-type-risk .card-type-dot  { background:var(--red); }
+  .card-type-done .card-type-dot  { background:var(--green); }
+  .card-header-text { flex:1; font-size:13px; font-weight:500; color:var(--text-primary); line-height:1.3; }
+  .card-chevron { width:16px; height:16px; color:var(--text-muted); transition:transform var(--transition); flex-shrink:0; }
+  .card-chevron svg { width:100%; height:100%; }
+  .card.collapsed .card-chevron { transform:rotate(-90deg); }
+  .card-body { overflow:hidden; transition:max-height 260ms cubic-bezier(0.4,0,0.2,1),opacity 200ms ease; max-height:400px; }
+  .card.collapsed .card-body { max-height:0; opacity:0; }
+  .card-body-inner { padding:0 12px 12px; border-top:1px solid var(--border); padding-top:10px; }
+  .card-desc { font-family:var(--font-body); font-size:12.5px; color:var(--text-secondary); line-height:1.6; margin-bottom:8px; }
+  .checklist { list-style:none; display:flex; flex-direction:column; gap:5px; }
+  .checklist-item { display:flex; align-items:flex-start; gap:8px; font-family:var(--font-body); font-size:12px; color:var(--text-secondary); }
+  .checklist-item input[type="checkbox"] { width:14px; height:14px; accent-color:var(--accent); flex-shrink:0; margin-top:1px; cursor:pointer; }
+  .checklist-item.done span { text-decoration:line-through; color:var(--text-muted); }
+  .card-tags { display:flex; flex-wrap:wrap; gap:4px; margin-top:8px; }
+  .tag { font-size:10px; font-weight:500; padding:2px 7px; border-radius:20px; }
+  .tag-idea { background:var(--purple-dim); color:var(--purple); border:1px solid rgba(167,139,250,0.2); }
+  .tag-task { background:var(--accent-dim); color:var(--accent); border:1px solid rgba(79,142,247,0.2); }
+  .tag-note { background:var(--amber-dim); color:var(--amber); border:1px solid rgba(251,191,36,0.2); }
+  .tag-risk { background:rgba(248,113,113,0.1); color:var(--red); border:1px solid rgba(248,113,113,0.2); }
+  .tag-done { background:var(--green-dim); color:var(--green); border:1px solid rgba(52,211,153,0.2); }
+  .empty-hint { font-size:11px; color:var(--text-muted); font-style:italic; padding:4px 2px; }
+
+  /* Modal */
+  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); z-index:200; display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity 200ms ease; }
+  .modal-overlay.open { opacity:1; pointer-events:all; }
+  .modal { background:var(--bg-surface); border:1px solid var(--border-active); border-radius:var(--radius-lg); width:420px; max-width:90vw; box-shadow:0 24px 64px rgba(0,0,0,0.6); transform:translateY(8px); transition:transform 200ms ease; }
+  .modal-overlay.open .modal { transform:translateY(0); }
+  .modal-header { padding:18px 20px 14px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
+  .modal-title { font-size:15px; font-weight:600; }
+  .modal-close { width:28px; height:28px; background:transparent; border:none; color:var(--text-muted); cursor:pointer; border-radius:var(--radius-sm); font-size:18px; display:flex; align-items:center; justify-content:center; transition:var(--transition); }
+  .modal-close:hover { background:var(--bg-elevated); color:var(--text-primary); }
+  .modal-body { padding:18px 20px; display:flex; flex-direction:column; gap:14px; }
+  .form-group { display:flex; flex-direction:column; gap:5px; }
+  .form-label { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-muted); }
+  .form-input, .form-select, .form-textarea { background:var(--bg-elevated); border:1px solid var(--border); border-radius:var(--radius-sm); padding:8px 11px; color:var(--text-primary); font-family:var(--font-ui); font-size:13px; outline:none; transition:border-color var(--transition); width:100%; }
+  .form-input:focus, .form-select:focus, .form-textarea:focus { border-color:var(--accent); box-shadow:0 0 0 2px var(--accent-dim); }
+  .form-textarea { resize:vertical; min-height:80px; line-height:1.5; }
+  .form-select option { background:var(--bg-elevated); }
+  .modal-footer { padding:14px 20px; border-top:1px solid var(--border); display:flex; gap:8px; justify-content:flex-end; }
+
+  /* Loading skeleton */
+  .skeleton { background:linear-gradient(90deg,var(--bg-elevated) 25%,var(--bg-hover) 50%,var(--bg-elevated) 75%); background-size:200% 100%; animation:shimmer 1.4s infinite; border-radius:var(--radius-sm); }
+  @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+  @media (prefers-reduced-motion:reduce) { .milestone-node.active .milestone-dot{animation:none} *,*::before,*::after{transition:none!important} }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="topbar-brand">
+      <div class="topbar-icon">🗓</div>
+      <span class="topbar-title">Timeline Planner</span>
+      <span class="topbar-sub" id="plan-range"></span>
+    </div>
+    <div class="topbar-actions">
+      <div class="save-dot" id="save-dot" title="All changes saved"></div>
+      <button class="btn btn-ghost" onclick="toggleAll(false)">Expand all</button>
+      <button class="btn btn-ghost" onclick="toggleAll(true)">Collapse all</button>
+      <button class="btn btn-primary" onclick="openAddMilestone()">＋ Milestone</button>
+    </div>
+  </header>
+  <div class="main">
+    <div class="timeline-stage" id="timeline-stage">
+      <div class="timeline-rail"></div>
+      <div class="timeline-inner" id="timeline-inner"></div>
+    </div>
+    <div class="cards-area" id="cards-area">
+      <div class="cards-viewport" id="cards-viewport"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Card Modal -->
+<div class="modal-overlay" id="card-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="card-modal-title">Add item</span>
+      <button class="modal-close" onclick="closeCardModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Title</label><input class="form-input" id="card-title" placeholder="Short, clear title…"></div>
+      <div class="form-group"><label class="form-label">Type</label>
+        <select class="form-select" id="card-type">
+          <option value="idea">💡 Idea</option>
+          <option value="task">✅ Task</option>
+          <option value="note">📝 Note</option>
+          <option value="risk">⚠️ Risk</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Description</label><textarea class="form-textarea" id="card-desc" placeholder="Optional detail…"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeCardModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveCard()">Add item</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Milestone Modal -->
+<div class="modal-overlay" id="ms-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">New Milestone</span>
+      <button class="modal-close" onclick="closeMsModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Milestone name</label><input class="form-input" id="ms-name" placeholder="e.g. Beta Launch"></div>
+      <div class="form-group"><label class="form-label">Date</label><input class="form-input" id="ms-date" type="date"></div>
+      <div class="form-group"><label class="form-label">Label (optional)</label><input class="form-input" id="ms-label" placeholder="e.g. v2.0, Q4 '26"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeMsModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveMilestone()">Add milestone</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ─── State ─────────────────────────── */
+let milestones = [];
+let selectedMsId = null;
+let currentMilestoneId = null;
+let saveTimer = null;
+const TYPE_ICONS = { idea:'💡', task:'✅', note:'📝', risk:'⚠️', done:'✓' };
+
+/* ─── API ────────────────────────────── */
+async function loadBoard() {
+  try {
+    const res = await fetch('/api/board');
+    const data = await res.json();
+    milestones = data.milestones || [];
+    render();
+  } catch(e) {
+    console.error('Load failed', e);
+  }
+}
+
+function scheduleSave() {
+  const dot = document.getElementById('save-dot');
+  dot.className = 'save-dot saving';
+  dot.title = 'Saving…';
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async () => {
+    try {
+      await fetch('/api/board', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ milestones })
+      });
+      dot.className = 'save-dot saved';
+      dot.title = 'All changes saved';
+      setTimeout(() => { dot.className = 'save-dot'; }, 2000);
+    } catch(e) {
+      dot.className = 'save-dot';
+      dot.style.background = 'var(--red)';
+      dot.title = 'Save failed';
+    }
+  }, 800);
+}
+
+/* ─── Render ─────────────────────────── */
+function render() {
+  renderTimeline();
+  renderCards();
+  updatePlanRange();
+}
+
+function renderTimeline() {
+  const inner = document.getElementById('timeline-inner');
+  inner.innerHTML = '';
+  milestones.forEach(ms => {
+    const isActive = ms.isToday;
+    const isSelected = ms.id === selectedMsId;
+    const wrap = document.createElement('div');
+    wrap.className = 'milestone-spacing';
+    const node = document.createElement('div');
+    node.className = 'milestone-node' + (isActive ? ' active' : '') + (isSelected ? ' selected' : '');
+    node.onclick = () => selectMilestone(ms.id);
+    node.innerHTML = `
+      ${isActive ? '<span class="today-badge">TODAY</span>' : ''}
+      <div class="milestone-dot"></div>
+      <div class="milestone-label">
+        <div class="milestone-date">${formatDate(ms.date)}</div>
+        <div class="milestone-name">${escapeHtml(ms.name)}</div>
+        ${ms.label ? `<span class="milestone-badge">${escapeHtml(ms.label)}</span>` : ''}
+      </div>`;
+    wrap.appendChild(node);
+    inner.appendChild(wrap);
+  });
+}
+
+function renderCards() {
+  const viewport = document.getElementById('cards-viewport');
+  viewport.innerHTML = '';
+  milestones.forEach(ms => {
+    const isSelected = ms.id === selectedMsId;
+    const isDimmed = selectedMsId && !isSelected;
+    const col = document.createElement('div');
+    col.className = 'milestone-col' + (isDimmed ? ' dimmed' : '');
+    col.setAttribute('data-id', ms.id);
+    const ideas = ms.cards.filter(c => c.type === 'idea');
+    const tasks  = ms.cards.filter(c => c.type !== 'idea');
+    if (ideas.length > 0) {
+      col.innerHTML += `<div class="col-section-label">Ideas</div>`;
+      ideas.forEach(c => col.appendChild(buildCard(c, ms.id)));
+    }
+    col.innerHTML += `<button class="add-card-btn" onclick="openAddCard('${ms.id}','idea')">＋ idea</button>`;
+    if (tasks.length > 0) {
+      col.innerHTML += `<div class="col-section-label" style="margin-top:6px">Tasks & Notes</div>`;
+      tasks.forEach(c => col.appendChild(buildCard(c, ms.id)));
+    }
+    col.innerHTML += `<button class="add-card-btn" onclick="openAddCard('${ms.id}','task')">＋ task / note</button>`;
+    viewport.appendChild(col);
+  });
+}
+
+function buildCard(card, msId) {
+  const el = document.createElement('div');
+  el.className = `card card-type-${card.type}${card.collapsed ? ' collapsed' : ''}`;
+  el.setAttribute('data-card-id', card.id);
+  const hasTasks = card.tasks && card.tasks.length > 0;
+  const doneCount = hasTasks ? card.tasks.filter(t => t.done).length : 0;
+  const taskSummary = hasTasks ? ` <span style="font-size:10px;color:var(--text-muted);margin-left:4px;">${doneCount}/${card.tasks.length}</span>` : '';
+  let bodyContent = '';
+  if (card.desc) bodyContent += `<p class="card-desc">${escapeHtml(card.desc)}</p>`;
+  if (hasTasks) {
+    bodyContent += `<ul class="checklist">`;
+    card.tasks.forEach((t, ti) => {
+      bodyContent += `<li class="checklist-item${t.done?' done':''}"><input type="checkbox" ${t.done?'checked':''} onchange="toggleTask('${card.id}',${ti},'${msId}',this.checked)"><span>${escapeHtml(t.text)}</span></li>`;
+    });
+    bodyContent += `</ul>`;
+  }
+  if (!card.desc && !hasTasks) bodyContent += `<span class="empty-hint">No detail yet.</span>`;
+  el.innerHTML = `
+    <div class="card-header" onclick="toggleCard('${card.id}','${msId}')">
+      <div class="card-type-dot"></div>
+      <span class="card-header-text">${escapeHtml(card.title)}${taskSummary}</span>
+      <span class="card-chevron"><svg viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+    </div>
+    <div class="card-body"><div class="card-body-inner">
+      ${bodyContent}
+      <div class="card-tags"><span class="tag tag-${card.type}">${TYPE_ICONS[card.type]} ${card.type}</span></div>
+    </div></div>`;
+  return el;
+}
+
+/* ─── Selection ──────────────────────── */
+function selectMilestone(msId) {
+  const ms = milestones.find(m => m.id === msId);
+  if (!ms) return;
+
+  if (selectedMsId === msId) {
+    // Deselect: collapse all cards and clear selection
+    selectedMsId = null;
+    ms.cards.forEach(c => { c.collapsed = true; });
+  } else {
+    // Deselect previous
+    if (selectedMsId) {
+      const prev = milestones.find(m => m.id === selectedMsId);
+      if (prev) prev.cards.forEach(c => { c.collapsed = true; });
+    }
+    selectedMsId = msId;
+    // Expand all cards for selected
+    ms.cards.forEach(c => { c.collapsed = false; });
+  }
+
+  render();
+  if (selectedMsId) {
+    setTimeout(() => {
+      const col = document.querySelector(`#cards-viewport [data-id="${msId}"]`);
+      if (col) col.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }, 50);
+  }
+  scheduleSave();
+}
+
+/* ─── Card interactions ──────────────── */
+function toggleCard(cardId, msId) {
+  const ms = milestones.find(m => m.id === msId);
+  const card = ms?.cards.find(c => c.id === cardId);
+  if (!card) return;
+  card.collapsed = !card.collapsed;
+  const el = document.querySelector(`[data-card-id="${cardId}"]`);
+  if (el) el.classList.toggle('collapsed', card.collapsed);
+  scheduleSave();
+}
+
+function toggleAll(collapse) {
+  milestones.forEach(ms => ms.cards.forEach(c => c.collapsed = collapse));
+  selectedMsId = null;
+  render();
+  scheduleSave();
+}
+
+function toggleTask(cardId, taskIndex, msId, checked) {
+  const ms = milestones.find(m => m.id === msId);
+  const card = ms?.cards.find(c => c.id === cardId);
+  if (!card) return;
+  card.tasks[taskIndex].done = checked;
+  const el = document.querySelector(`[data-card-id="${cardId}"] .card-header-text`);
+  if (el) {
+    const doneCount = card.tasks.filter(t => t.done).length;
+    el.innerHTML = `${escapeHtml(card.title)} <span style="font-size:10px;color:var(--text-muted);margin-left:4px;">${doneCount}/${card.tasks.length}</span>`;
+  }
+  const li = document.querySelectorAll(`[data-card-id="${cardId}"] .checklist-item`)[taskIndex];
+  if (li) li.classList.toggle('done', checked);
+  scheduleSave();
+}
+
+/* ─── Add Card ───────────────────────── */
+function openAddCard(msId, defaultType = 'idea') {
+  currentMilestoneId = msId;
+  const ms = milestones.find(m => m.id === msId);
+  document.getElementById('card-modal-title').textContent = `Add to "${ms?.name}"`;
+  document.getElementById('card-title').value = '';
+  document.getElementById('card-desc').value = '';
+  document.getElementById('card-type').value = defaultType;
+  document.getElementById('card-modal').classList.add('open');
+  setTimeout(() => document.getElementById('card-title').focus(), 60);
+}
+function closeCardModal() { document.getElementById('card-modal').classList.remove('open'); currentMilestoneId = null; }
+function saveCard() {
+  const title = document.getElementById('card-title').value.trim();
+  if (!title) { document.getElementById('card-title').focus(); return; }
+  const ms = milestones.find(m => m.id === currentMilestoneId);
+  if (!ms) return;
+  ms.cards.push({ id: 'c' + Date.now(), type: document.getElementById('card-type').value, title, desc: document.getElementById('card-desc').value.trim(), tasks: [], collapsed: false });
+  closeCardModal();
+  render();
+  scheduleSave();
+}
+
+/* ─── Add Milestone ──────────────────── */
+function openAddMilestone() {
+  document.getElementById('ms-date').value = new Date().toISOString().slice(0,10);
+  document.getElementById('ms-name').value = '';
+  document.getElementById('ms-label').value = '';
+  document.getElementById('ms-modal').classList.add('open');
+  setTimeout(() => document.getElementById('ms-name').focus(), 60);
+}
+function closeMsModal() { document.getElementById('ms-modal').classList.remove('open'); }
+function saveMilestone() {
+  const name = document.getElementById('ms-name').value.trim();
+  if (!name) { document.getElementById('ms-name').focus(); return; }
+  const dateVal = document.getElementById('ms-date').value;
+  const today = new Date().toISOString().slice(0,10);
+  milestones.push({ id: 'm' + Date.now(), name, date: dateVal || today, label: document.getElementById('ms-label').value.trim(), isToday: dateVal === today, cards: [] });
+  milestones.sort((a, b) => a.date.localeCompare(b.date));
+  closeMsModal();
+  render();
+  scheduleSave();
+}
+
+/* ─── Scroll sync ────────────────────── */
+function syncScroll() {
+  const stage = document.getElementById('timeline-stage');
+  const cardsArea = document.getElementById('cards-area');
+  const inner = document.getElementById('timeline-inner');
+  const viewport = document.getElementById('cards-viewport');
+  let stageLock = false, cardsLock = false;
+  stage.addEventListener('scroll', () => {
+    if (cardsLock) return;
+    stageLock = true;
+    const ratio = stage.scrollLeft / (inner.scrollWidth - stage.clientWidth || 1);
+    cardsArea.scrollLeft = ratio * (viewport.scrollWidth - cardsArea.clientWidth);
+    requestAnimationFrame(() => stageLock = false);
+  });
+  cardsArea.addEventListener('scroll', () => {
+    if (stageLock) return;
+    cardsLock = true;
+    const ratio = cardsArea.scrollLeft / (viewport.scrollWidth - cardsArea.clientWidth || 1);
+    stage.scrollLeft = ratio * (inner.scrollWidth - stage.clientWidth);
+    requestAnimationFrame(() => cardsLock = false);
+  });
+}
+
+/* ─── Keyboard ───────────────────────── */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeCardModal(); closeMsModal(); }
+});
+document.getElementById('card-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeCardModal(); });
+document.getElementById('ms-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeMsModal(); });
+
+/* ─── Utils ──────────────────────────── */
+function formatDate(dateStr) {
+  const d = new Date(dateStr + 'T12:00:00');
+  return d.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'2-digit' });
+}
+function escapeHtml(s) {
+  return s?.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') ?? '';
+}
+function updatePlanRange() {
+  if (!milestones.length) return;
+  const fmt = s => new Date(s + 'T12:00:00').toLocaleDateString('en-GB', { month:'short', year:'numeric' });
+  document.getElementById('plan-range').textContent = `${fmt(milestones[0].date)} → ${fmt(milestones[milestones.length-1].date)}`;
+}
+
+/* ─── Init ───────────────────────────── */
+loadBoard();
+syncScroll();
+</script>
+</body>
+</html>
