@@ -83,7 +83,7 @@
     backdrop-filter: blur(14px);
     border-bottom: 1px solid var(--line);
   }
-  .topbar-left { display: flex; align-items: center; gap: 14px; min-width: 0; }
+  .topbar-left { display: flex; align-items: center; gap: 14px; min-width: 0; flex: 1 1 auto; overflow: hidden; }
   .topbar-brand { display: flex; align-items: baseline; gap: 9px; }
   .topbar-title {
     font-family: var(--font-display);
@@ -91,13 +91,19 @@
     color: var(--ink); white-space: nowrap;
   }
   .topbar-sub { font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); white-space: nowrap; }
+  @media (max-width: 1100px) { .topbar-sub { display: none; } }
+  @media (max-width: 900px) { .topbar-title { display: none; } }
 
   /* Timeline tabs */
   .timeline-tabs {
     display: flex; align-items: center; gap: 2px;
     background: var(--surface-2); border: 1px solid var(--line);
-    border-radius: var(--r-md); padding: 3px; min-width: 0;
+    border-radius: var(--r-md); padding: 3px;
+    min-width: 0; flex: 0 1 auto;
+    overflow-x: auto; scrollbar-width: none;
   }
+  .timeline-tabs::-webkit-scrollbar { display: none; }
+  .timeline-tab { flex-shrink: 0; }
   .timeline-tab {
     display: flex; align-items: center; gap: 2px;
     border-radius: 7px; background: transparent;
@@ -130,7 +136,7 @@
   }
   .timeline-tab-add:hover { background: var(--indigo-soft); color: var(--indigo); }
 
-  .topbar-right { display: flex; align-items: center; gap: 7px; }
+  .topbar-right { display: flex; align-items: center; gap: 7px; flex: 0 0 auto; }
   .save-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--line-2); transition: background 300ms; flex-shrink: 0; }
   .save-dot.saving { background: var(--ochre); }
   .save-dot.saved  { background: var(--moss); }
