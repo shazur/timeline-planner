@@ -6,106 +6,141 @@
 <title>Timeline Planner</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --canvas:      #0C0E14;
-    --glass:       rgba(255,255,255,0.04);
-    --glass-hover: rgba(255,255,255,0.07);
-    --glass-border:rgba(255,255,255,0.08);
-    --glass-active:rgba(255,255,255,0.14);
-    --accent:      #5B9CF6;
-    --accent-glow: rgba(91,156,246,0.22);
-    --accent-dim:  rgba(91,156,246,0.10);
-    --purple:      #A78BFA;
-    --purple-dim:  rgba(167,139,250,0.10);
-    --green:       #34D399;
-    --green-dim:   rgba(52,211,153,0.10);
-    --amber:       #FBBF24;
-    --amber-dim:   rgba(251,191,36,0.10);
-    --red:         #F87171;
-    --red-dim:     rgba(248,113,113,0.10);
-    --text-1:      rgba(255,255,255,0.92);
-    --text-2:      rgba(255,255,255,0.50);
-    --text-3:      rgba(255,255,255,0.25);
-    --font-ui:    'DM Sans', system-ui, sans-serif;
-    --font-mono:  'JetBrains Mono', monospace;
+    /* Warm paper ground, slightly cool-biased neutrals toward the indigo accent */
+    --paper:        #F7F6F3;
+    --paper-2:      #FFFFFF;
+    --surface:      #FFFFFF;
+    --surface-2:    #FBFAF8;
+    --line:         #E4E2DC;
+    --line-2:       #D3D0C8;
+
+    --ink:          #23211E;
+    --ink-2:        #5C5852;
+    --ink-3:        #96918A;
+
+    --indigo:       #4F46B8;
+    --indigo-soft:  #EDEBF8;
+    --indigo-line:  #C9C4EC;
+
+    --plum:         #8B5CA8;
+    --plum-soft:    #F3EBF7;
+    --plum-line:    #DFCBE9;
+
+    --moss:         #4E7A4A;
+    --moss-soft:    #EAF1E8;
+    --moss-line:    #C8DCC4;
+
+    --ochre:        #A8792B;
+    --ochre-soft:   #F8F0DE;
+    --ochre-line:   #E8D5A8;
+
+    --clay:         #B0503F;
+    --clay-soft:    #FAEBE8;
+    --clay-line:    #EFCCC5;
+
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-ui:      'Inter', system-ui, sans-serif;
+    --font-mono:    'JetBrains Mono', ui-monospace, monospace;
+
     --r-sm: 6px; --r-md: 10px; --r-lg: 16px;
-    --t: 160ms cubic-bezier(0.4,0,0.2,1);
+    --t: 150ms cubic-bezier(0.4,0,0.2,1);
+    --shadow-1: 0 1px 2px rgba(35,33,30,0.05);
+    --shadow-2: 0 2px 8px rgba(35,33,30,0.07), 0 1px 2px rgba(35,33,30,0.04);
+    --shadow-3: 0 12px 32px rgba(35,33,30,0.12), 0 2px 8px rgba(35,33,30,0.06);
   }
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  html, body { height: 100%; background: var(--canvas); color: var(--text-1); font-family: var(--font-ui); font-size: 14px; overflow: hidden; }
+  html, body {
+    height: 100%;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-ui);
+    font-size: 14px;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
 
-  /* ── CANVAS LAYER ─────────────────── */
-  #bg-canvas { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+  /* Soft paper texture wash */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(1200px 600px at 12% -10%, rgba(79,70,184,0.05), transparent 60%),
+      radial-gradient(1000px 500px at 88% 110%, rgba(139,92,168,0.045), transparent 60%);
+  }
 
   .app { position: relative; z-index: 1; display: flex; flex-direction: column; height: 100vh; }
 
   /* ── TOPBAR ───────────────────────── */
   .topbar {
-    flex-shrink: 0; height: 52px;
+    flex-shrink: 0; height: 56px;
     display: flex; align-items: center; justify-content: space-between;
-    padding: 0 20px;
-    background: rgba(12,14,20,0.7);
-    backdrop-filter: blur(16px);
-    border-bottom: 1px solid var(--glass-border);
+    padding: 0 22px;
+    background: rgba(255,255,255,0.82);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--line);
   }
+  .topbar-left { display: flex; align-items: center; gap: 14px; min-width: 0; }
+  .topbar-brand { display: flex; align-items: baseline; gap: 9px; }
+  .topbar-title {
+    font-family: var(--font-display);
+    font-size: 17px; font-weight: 600; letter-spacing: -0.015em;
+    color: var(--ink); white-space: nowrap;
+  }
+  .topbar-sub { font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); white-space: nowrap; }
 
-  .topbar-left { display: flex; align-items: center; gap: 12px; }
-  .topbar-brand { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; letter-spacing: -0.01em; }
-  .topbar-icon { width: 26px; height: 26px; background: var(--accent); border-radius: var(--r-sm); display: flex; align-items: center; justify-content: center; font-size: 13px; }
-  .topbar-sub { font-family: var(--font-mono); font-size: 11px; color: var(--text-3); }
-
-  /* Timeline switcher */
+  /* Timeline tabs */
   .timeline-tabs {
     display: flex; align-items: center; gap: 2px;
-    background: var(--glass); border: 1px solid var(--glass-border);
-    border-radius: var(--r-md); padding: 3px;
+    background: var(--surface-2); border: 1px solid var(--line);
+    border-radius: var(--r-md); padding: 3px; min-width: 0;
   }
   .timeline-tab {
-    padding: 4px 12px; border-radius: 7px; font-size: 12px; font-weight: 500;
-    cursor: pointer; border: none; background: transparent; color: var(--text-2);
+    padding: 4px 12px; border-radius: 7px;
+    font-family: var(--font-ui); font-size: 12px; font-weight: 500;
+    cursor: pointer; border: none; background: transparent; color: var(--ink-2);
     transition: var(--t); white-space: nowrap;
+    max-width: 160px; overflow: hidden; text-overflow: ellipsis;
   }
-  .timeline-tab.active { background: var(--glass-active); color: var(--text-1); }
-  .timeline-tab:hover:not(.active) { background: var(--glass-hover); color: var(--text-1); }
+  .timeline-tab.active { background: var(--surface); color: var(--ink); box-shadow: var(--shadow-1); font-weight: 600; }
+  .timeline-tab:hover:not(.active) { background: rgba(35,33,30,0.04); color: var(--ink); }
   .timeline-tab-add {
     width: 26px; height: 26px; border-radius: 7px; border: none;
-    background: transparent; color: var(--text-3); font-size: 16px;
+    background: transparent; color: var(--ink-3); font-size: 17px; line-height: 1;
     cursor: pointer; display: flex; align-items: center; justify-content: center;
-    transition: var(--t);
+    transition: var(--t); flex-shrink: 0;
   }
-  .timeline-tab-add:hover { background: var(--glass-hover); color: var(--accent); }
+  .timeline-tab-add:hover { background: var(--indigo-soft); color: var(--indigo); }
 
-  /* Actions */
-  .topbar-right { display: flex; align-items: center; gap: 6px; }
-  .save-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-3); transition: background 300ms; }
-  .save-dot.saving { background: var(--amber); }
-  .save-dot.saved  { background: var(--green); }
+  .topbar-right { display: flex; align-items: center; gap: 7px; }
+  .save-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--line-2); transition: background 300ms; flex-shrink: 0; }
+  .save-dot.saving { background: var(--ochre); }
+  .save-dot.saved  { background: var(--moss); }
 
   .btn {
     display: inline-flex; align-items: center; gap: 5px;
-    padding: 5px 12px; border-radius: var(--r-sm);
+    padding: 6px 13px; border-radius: var(--r-sm);
     font-family: var(--font-ui); font-size: 12px; font-weight: 500;
-    cursor: pointer; border: none; transition: var(--t); white-space: nowrap;
+    cursor: pointer; border: 1px solid transparent; transition: var(--t); white-space: nowrap;
   }
-  .btn-ghost { background: var(--glass); color: var(--text-2); border: 1px solid var(--glass-border); }
-  .btn-ghost:hover { background: var(--glass-hover); color: var(--text-1); }
-  .btn-danger { background: var(--red-dim); color: var(--red); border: 1px solid rgba(248,113,113,0.2); }
-  .btn-danger:hover { background: rgba(248,113,113,0.18); }
-  .btn-primary { background: var(--accent); color: #fff; }
-  .btn-primary:hover { background: #6baaf8; }
+  .btn-ghost { background: var(--surface); color: var(--ink-2); border-color: var(--line); box-shadow: var(--shadow-1); }
+  .btn-ghost:hover { background: var(--surface-2); color: var(--ink); border-color: var(--line-2); }
+  .btn-danger { background: var(--clay-soft); color: var(--clay); border-color: var(--clay-line); }
+  .btn-danger:hover { background: #F6DFDA; }
+  .btn-primary { background: var(--indigo); color: #fff; box-shadow: var(--shadow-1); }
+  .btn-primary:hover { background: #5B52C7; }
 
-  /* ── MAIN ─────────────────────────── */
   .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
 
   /* ── TIMELINE RAIL ────────────────── */
   .timeline-stage {
-    flex-shrink: 0; height: 130px;
+    flex-shrink: 0; height: 118px;
     overflow-x: auto; overflow-y: visible;
-    background: rgba(255,255,255,0.015);
-    border-bottom: 1px solid var(--glass-border);
+    background: linear-gradient(180deg, rgba(255,255,255,0.7), rgba(255,255,255,0.35));
+    border-bottom: 1px solid var(--line);
     scrollbar-width: none;
   }
   .timeline-stage::-webkit-scrollbar { display: none; }
@@ -113,177 +148,258 @@
     position: relative; height: 100%; min-width: max-content;
     padding: 0 80px; display: flex; align-items: center;
   }
-
-  /* gradient rail line */
   .timeline-rail {
     position: absolute; top: 50%; left: 0; right: 0;
-    height: 1px; transform: translateY(-50%); pointer-events: none;
+    height: 2px; transform: translateY(-50%); pointer-events: none;
     background: linear-gradient(90deg,
       transparent 0%,
-      rgba(255,255,255,0.08) 8%,
-      rgba(255,255,255,0.08) 92%,
+      var(--line-2) 7%,
+      var(--line-2) 93%,
       transparent 100%);
+    border-radius: 2px;
   }
 
-  /* ── MILESTONE NODE ───────────────── */
-  .milestone-spacing { width: 220px; display: flex; justify-content: center; flex-shrink: 0; }
+  /* ── DATE NODE (one per calendar date) ── */
+  .date-spacing { width: 240px; display: flex; justify-content: center; flex-shrink: 0; }
 
-  .milestone-node {
+  .date-node {
     position: relative; z-index: 10; cursor: pointer;
     display: flex; flex-direction: column; align-items: center; gap: 7px;
   }
 
-  .milestone-dot {
-    width: 12px; height: 12px; border-radius: 50%;
-    border: 1.5px solid rgba(255,255,255,0.2);
-    background: var(--canvas);
+  .date-dot {
+    width: 13px; height: 13px; border-radius: 50%;
+    border: 2px solid var(--line-2);
+    background: var(--paper-2);
     transition: var(--t);
-    box-shadow: 0 0 0 0 transparent;
+    box-shadow: 0 0 0 3px rgba(255,255,255,0.9);
   }
-  .milestone-node:hover .milestone-dot { border-color: var(--accent); background: rgba(91,156,246,0.3); }
+  .date-node:hover .date-dot { border-color: var(--indigo); background: var(--indigo-soft); }
 
-  .milestone-node.active .milestone-dot {
-    border-color: var(--accent); background: var(--accent);
-    box-shadow: 0 0 0 3px var(--accent-dim), 0 0 14px var(--accent-glow);
+  .date-node.today .date-dot {
+    border-color: var(--indigo); background: var(--indigo);
+    box-shadow: 0 0 0 3px var(--indigo-soft), 0 0 0 5px rgba(255,255,255,0.9);
     animation: pulse 2.6s ease-in-out infinite;
   }
   @keyframes pulse {
-    0%,100% { box-shadow: 0 0 0 3px var(--accent-dim), 0 0 14px var(--accent-glow); }
-    50%      { box-shadow: 0 0 0 6px var(--accent-dim), 0 0 22px var(--accent-glow); }
+    0%,100% { box-shadow: 0 0 0 3px var(--indigo-soft), 0 0 0 5px rgba(255,255,255,0.9); }
+    50%      { box-shadow: 0 0 0 6px var(--indigo-soft), 0 0 0 8px rgba(255,255,255,0.9); }
   }
-  .milestone-node.selected .milestone-dot {
-    border-color: var(--purple); background: var(--purple);
-    box-shadow: 0 0 0 3px var(--purple-dim), 0 0 14px rgba(167,139,250,0.3);
+  .date-node.selected .date-dot {
+    border-color: var(--plum); background: var(--plum);
+    box-shadow: 0 0 0 3px var(--plum-soft), 0 0 0 5px rgba(255,255,255,0.9);
     animation: none;
   }
-  .milestone-node.selected .milestone-name { color: var(--text-1); }
-  .milestone-node.selected .milestone-badge { background: var(--purple); color: #fff; border-color: transparent; }
 
-  .milestone-label { text-align: center; user-select: none; }
-  .milestone-date { font-family: var(--font-mono); font-size: 10px; color: var(--text-3); letter-spacing: 0.04em; margin-bottom: 2px; }
-  .milestone-name { font-size: 12px; font-weight: 600; color: var(--text-2); transition: var(--t); max-width: 140px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .milestone-node:hover .milestone-name { color: var(--text-1); }
-  .milestone-badge { font-size: 10px; font-weight: 500; padding: 1px 6px; border-radius: 20px; background: var(--accent-dim); color: var(--accent); border: 1px solid rgba(91,156,246,0.2); }
-  .today-badge { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; background: var(--accent); color: #fff; padding: 2px 5px; border-radius: 3px; position: absolute; top: -22px; left: 50%; transform: translateX(-50%); white-space: nowrap; }
+  .date-label { text-align: center; user-select: none; max-width: 210px; }
+  .date-text {
+    font-family: var(--font-mono); font-size: 10.5px; color: var(--ink-3);
+    letter-spacing: 0.04em; margin-bottom: 3px;
+  }
+  .date-names {
+    font-family: var(--font-display);
+    font-size: 13px; font-weight: 600; color: var(--ink-2);
+    transition: var(--t); line-height: 1.25;
+    display: flex; flex-direction: column; align-items: center; gap: 1px;
+  }
+  .date-node:hover .date-names, .date-node.selected .date-names { color: var(--ink); }
+  .date-name-row { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+  .date-count {
+    font-family: var(--font-ui); font-size: 10px; font-weight: 500;
+    color: var(--indigo); background: var(--indigo-soft);
+    border: 1px solid var(--indigo-line);
+    padding: 1px 6px; border-radius: 20px; margin-top: 3px; display: inline-block;
+  }
+  .today-badge {
+    font-family: var(--font-ui);
+    font-size: 8.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
+    background: var(--indigo); color: #fff; padding: 2px 6px; border-radius: 3px;
+    position: absolute; top: -21px; left: 50%; transform: translateX(-50%); white-space: nowrap;
+  }
 
   /* ── CARDS AREA ───────────────────── */
-  .cards-area { flex: 1; overflow: auto; padding: 24px 0; scrollbar-width: thin; scrollbar-color: var(--glass-active) transparent; }
-  .cards-area::-webkit-scrollbar { width: 4px; }
-  .cards-area::-webkit-scrollbar-thumb { background: var(--glass-active); border-radius: 2px; }
+  .cards-area { flex: 1; overflow: auto; padding: 22px 0 40px; scrollbar-width: thin; scrollbar-color: var(--line-2) transparent; }
+  .cards-area::-webkit-scrollbar { width: 8px; height: 8px; }
+  .cards-area::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 4px; border: 2px solid var(--paper); }
   .cards-viewport { display: flex; min-width: max-content; padding: 0 80px; align-items: flex-start; }
 
-  /* ── MILESTONE COLUMN ─────────────── */
-  .milestone-col { width: 220px; flex-shrink: 0; display: flex; flex-direction: column; gap: 8px; padding: 0 8px; transition: opacity var(--t); }
-  .milestone-col.dimmed { opacity: 0.25; }
+  /* One column per DATE; holds stacked milestone groups */
+  .date-col { width: 240px; flex-shrink: 0; display: flex; flex-direction: column; gap: 14px; padding: 0 10px; transition: opacity var(--t); }
+  .date-col.dimmed { opacity: 0.32; }
+
+  /* ── MILESTONE GROUP (stacked within a date) ── */
+  .ms-group {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-2);
+    overflow: hidden;
+    transition: box-shadow var(--t), border-color var(--t);
+  }
+  .ms-group:hover { box-shadow: var(--shadow-3); border-color: var(--line-2); }
+  .ms-group.is-selected { border-color: var(--plum-line); box-shadow: 0 0 0 3px var(--plum-soft), var(--shadow-3); }
+
+  .ms-group-head {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 12px;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--line);
+    cursor: pointer; user-select: none;
+  }
+  .ms-group-title {
+    flex: 1; min-width: 0;
+    font-family: var(--font-display); font-size: 13.5px; font-weight: 600; color: var(--ink);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .ms-group-badge {
+    font-size: 9.5px; font-weight: 600; padding: 2px 7px; border-radius: 20px;
+    background: var(--indigo-soft); color: var(--indigo); border: 1px solid var(--indigo-line);
+    white-space: nowrap; flex-shrink: 0;
+  }
+  .ms-group-del {
+    width: 20px; height: 20px; border: none; background: transparent;
+    color: var(--ink-3); cursor: pointer; border-radius: 4px; font-size: 13px; line-height: 1;
+    display: flex; align-items: center; justify-content: center; transition: var(--t); flex-shrink: 0;
+  }
+  .ms-group-del:hover { background: var(--clay-soft); color: var(--clay); }
+
+  .ms-group-body { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 8px; }
 
   .col-label {
+    font-family: var(--font-ui);
     font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em;
-    color: var(--text-3); padding: 0 2px; display: flex; align-items: center; gap: 6px;
+    color: var(--ink-3); display: flex; align-items: center; gap: 7px;
   }
-  .col-label::after { content:''; flex:1; height:1px; background: var(--glass-border); }
+  .col-label::after { content:''; flex:1; height:1px; background: var(--line); }
 
   .add-btn {
     display: flex; align-items: center; gap: 6px; padding: 6px 10px;
-    border-radius: var(--r-sm); border: 1px dashed var(--glass-border);
-    background: transparent; color: var(--text-3); font-family: var(--font-ui);
+    border-radius: var(--r-sm); border: 1px dashed var(--line-2);
+    background: transparent; color: var(--ink-3); font-family: var(--font-ui);
     font-size: 11px; cursor: pointer; transition: var(--t); width: 100%;
   }
-  .add-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+  .add-btn:hover { border-color: var(--indigo); color: var(--indigo); background: var(--indigo-soft); border-style: solid; }
 
   /* ── CARD ─────────────────────────── */
   .card {
-    background: var(--glass); border: 1px solid var(--glass-border);
-    border-radius: var(--r-md); overflow: hidden;
-    transition: border-color var(--t), box-shadow var(--t), background var(--t);
-    backdrop-filter: blur(6px);
+    background: var(--paper-2);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--line-2);
+    border-radius: var(--r-md);
+    overflow: hidden;
+    transition: var(--t);
   }
-  .card:hover { background: var(--glass-hover); border-color: var(--glass-active); box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+  .card:hover { border-color: var(--line-2); box-shadow: var(--shadow-1); }
+  .card-type-idea { border-left-color: var(--plum);  background: linear-gradient(180deg, var(--plum-soft), var(--paper-2) 42%); }
+  .card-type-task { border-left-color: var(--indigo); background: linear-gradient(180deg, var(--indigo-soft), var(--paper-2) 42%); }
+  .card-type-note { border-left-color: var(--ochre); background: linear-gradient(180deg, var(--ochre-soft), var(--paper-2) 42%); }
+  .card-type-risk { border-left-color: var(--clay);  background: linear-gradient(180deg, var(--clay-soft), var(--paper-2) 42%); }
+
   .card-header { display: flex; align-items: center; gap: 8px; padding: 9px 11px; cursor: pointer; user-select: none; }
-  .card-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-  .card-type-idea .card-dot  { background: var(--purple); }
-  .card-type-task .card-dot  { background: var(--accent); }
-  .card-type-note .card-dot  { background: var(--amber); }
-  .card-type-risk .card-dot  { background: var(--red); }
-  .card-type-done .card-dot  { background: var(--green); }
-  .card-title { flex: 1; font-size: 12.5px; font-weight: 500; color: var(--text-1); line-height: 1.3; }
-  .card-chevron { width: 14px; height: 14px; color: var(--text-3); transition: transform var(--t); flex-shrink: 0; }
-  .card-chevron svg { width: 100%; height: 100%; }
+  .card-title { flex: 1; min-width: 0; font-size: 12.5px; font-weight: 500; color: var(--ink); line-height: 1.35; }
+  .card-count { font-family: var(--font-mono); font-size: 10px; color: var(--ink-3); margin-left: 4px; }
+  .card-chevron { width: 14px; height: 14px; color: var(--ink-3); transition: transform var(--t); flex-shrink: 0; }
+  .card-chevron svg { width: 100%; height: 100%; display: block; }
   .card.collapsed .card-chevron { transform: rotate(-90deg); }
-  .card-body { overflow: hidden; transition: max-height 240ms cubic-bezier(0.4,0,0.2,1), opacity 180ms ease; max-height: 500px; }
+
+  .card-body { overflow: hidden; transition: max-height 240ms cubic-bezier(0.4,0,0.2,1), opacity 180ms ease; max-height: 600px; }
   .card.collapsed .card-body { max-height: 0; opacity: 0; }
-  .card-body-inner { padding: 0 11px 11px; border-top: 1px solid var(--glass-border); padding-top: 9px; }
-  .card-desc { font-size: 12px; color: var(--text-2); line-height: 1.6; margin-bottom: 8px; }
-  .checklist { list-style: none; display: flex; flex-direction: column; gap: 5px; }
-  .checklist-item { display: flex; align-items: flex-start; gap: 7px; font-size: 11.5px; color: var(--text-2); }
-  .checklist-item input[type="checkbox"] { width: 13px; height: 13px; accent-color: var(--accent); flex-shrink: 0; margin-top: 1px; cursor: pointer; }
-  .checklist-item.done span { text-decoration: line-through; color: var(--text-3); }
-  .card-tag { display: inline-flex; margin-top: 8px; font-size: 10px; font-weight: 500; padding: 2px 7px; border-radius: 20px; }
-  .tag-idea { background: var(--purple-dim); color: var(--purple); border: 1px solid rgba(167,139,250,0.2); }
-  .tag-task { background: var(--accent-dim); color: var(--accent); border: 1px solid rgba(91,156,246,0.2); }
-  .tag-note { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(251,191,36,0.2); }
-  .tag-risk { background: var(--red-dim); color: var(--red); border: 1px solid rgba(248,113,113,0.2); }
-  .empty-hint { font-size: 11px; color: var(--text-3); font-style: italic; }
+  .card-body-inner { padding: 9px 11px 11px; border-top: 1px solid var(--line); }
+  .card-desc { font-size: 12px; color: var(--ink-2); line-height: 1.6; margin-bottom: 9px; }
+
+  .checklist { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+  .checklist-item { display: flex; align-items: flex-start; gap: 8px; font-size: 11.5px; color: var(--ink-2); line-height: 1.45; }
+  .checklist-item input[type="checkbox"] { width: 13px; height: 13px; accent-color: var(--indigo); flex-shrink: 0; margin-top: 1px; cursor: pointer; }
+  .checklist-item.done span { text-decoration: line-through; color: var(--ink-3); }
+
+  .card-tag { display: inline-flex; align-items: center; gap: 4px; margin-top: 9px; font-size: 9.5px; font-weight: 600; padding: 2px 8px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .tag-idea { background: var(--plum-soft);   color: var(--plum);   border: 1px solid var(--plum-line); }
+  .tag-task { background: var(--indigo-soft); color: var(--indigo); border: 1px solid var(--indigo-line); }
+  .tag-note { background: var(--ochre-soft);  color: var(--ochre);  border: 1px solid var(--ochre-line); }
+  .tag-risk { background: var(--clay-soft);   color: var(--clay);   border: 1px solid var(--clay-line); }
+  .empty-hint { font-size: 11px; color: var(--ink-3); font-style: italic; }
+
+  /* Empty state */
+  .empty-state {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 10px; padding: 70px 30px; width: 100%; text-align: center;
+  }
+  .empty-state-title { font-family: var(--font-display); font-size: 19px; font-weight: 600; color: var(--ink-2); }
+  .empty-state-desc { font-size: 13px; color: var(--ink-3); max-width: 340px; line-height: 1.6; }
 
   /* ── MODAL ────────────────────────── */
-  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); backdrop-filter: blur(8px); z-index: 200; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 180ms ease; }
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(35,33,30,0.28); backdrop-filter: blur(5px);
+    z-index: 200; display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity 170ms ease;
+  }
   .modal-overlay.open { opacity: 1; pointer-events: all; }
-  .modal { background: rgba(18,21,32,0.95); border: 1px solid var(--glass-active); border-radius: var(--r-lg); width: 400px; max-width: 90vw; box-shadow: 0 32px 80px rgba(0,0,0,0.7); transform: translateY(10px) scale(0.98); transition: transform 180ms ease; }
+  .modal {
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg);
+    width: 410px; max-width: 90vw; box-shadow: 0 24px 64px rgba(35,33,30,0.22);
+    transform: translateY(10px) scale(0.985); transition: transform 170ms ease;
+  }
   .modal-overlay.open .modal { transform: translateY(0) scale(1); }
-  .modal-header { padding: 16px 18px 12px; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; }
-  .modal-title { font-size: 14px; font-weight: 600; }
-  .modal-close { width: 26px; height: 26px; background: transparent; border: none; color: var(--text-3); cursor: pointer; border-radius: var(--r-sm); font-size: 18px; display: flex; align-items: center; justify-content: center; transition: var(--t); }
-  .modal-close:hover { background: var(--glass-hover); color: var(--text-1); }
-  .modal-body { padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }
+  .modal-header { padding: 17px 19px 13px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .modal-title { font-family: var(--font-display); font-size: 15px; font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .modal-close { width: 26px; height: 26px; background: transparent; border: none; color: var(--ink-3); cursor: pointer; border-radius: var(--r-sm); font-size: 19px; line-height: 1; display: flex; align-items: center; justify-content: center; transition: var(--t); flex-shrink: 0; }
+  .modal-close:hover { background: var(--surface-2); color: var(--ink); }
+  .modal-body { padding: 17px 19px; display: flex; flex-direction: column; gap: 13px; }
   .form-group { display: flex; flex-direction: column; gap: 5px; }
-  .form-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-3); }
-  .form-input, .form-select, .form-textarea { background: var(--glass); border: 1px solid var(--glass-border); border-radius: var(--r-sm); padding: 7px 10px; color: var(--text-1); font-family: var(--font-ui); font-size: 13px; outline: none; transition: border-color var(--t); width: 100%; }
-  .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-dim); }
-  .form-textarea { resize: vertical; min-height: 72px; line-height: 1.5; }
-  .form-select option { background: #12151f; }
-  .modal-footer { padding: 12px 18px; border-top: 1px solid var(--glass-border); display: flex; gap: 6px; justify-content: flex-end; }
+  .form-label { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.09em; color: var(--ink-3); }
+  .form-hint { font-size: 11px; color: var(--ink-3); line-height: 1.45; }
+  .form-input, .form-select, .form-textarea {
+    background: var(--surface-2); border: 1px solid var(--line-2); border-radius: var(--r-sm);
+    padding: 8px 11px; color: var(--ink); font-family: var(--font-ui); font-size: 13px;
+    outline: none; transition: var(--t); width: 100%;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--indigo); box-shadow: 0 0 0 3px var(--indigo-soft); background: var(--surface); }
+  .form-textarea { resize: vertical; min-height: 74px; line-height: 1.55; }
+  .modal-footer { padding: 13px 19px; border-top: 1px solid var(--line); display: flex; gap: 7px; justify-content: flex-end; background: var(--surface-2); border-radius: 0 0 var(--r-lg) var(--r-lg); }
 
-  /* ── CONFIRM DIALOG ───────────────── */
-  .confirm-box { background: rgba(18,21,32,0.97); border: 1px solid rgba(248,113,113,0.3); border-radius: var(--r-lg); padding: 24px; width: 340px; max-width: 90vw; text-align: center; box-shadow: 0 32px 80px rgba(0,0,0,0.7); transform: translateY(10px) scale(0.98); transition: transform 180ms ease; }
+  /* Confirm */
+  .confirm-box {
+    background: var(--surface); border: 1px solid var(--clay-line); border-radius: var(--r-lg);
+    padding: 26px; width: 350px; max-width: 90vw; text-align: center;
+    box-shadow: 0 24px 64px rgba(35,33,30,0.22);
+    transform: translateY(10px) scale(0.985); transition: transform 170ms ease;
+  }
   .modal-overlay.open .confirm-box { transform: translateY(0) scale(1); }
-  .confirm-icon { font-size: 28px; margin-bottom: 10px; }
-  .confirm-title { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
-  .confirm-desc { font-size: 12.5px; color: var(--text-2); margin-bottom: 20px; line-height: 1.5; }
+  .confirm-icon { font-size: 26px; margin-bottom: 10px; }
+  .confirm-title { font-family: var(--font-display); font-size: 16px; font-weight: 600; margin-bottom: 7px; }
+  .confirm-desc { font-size: 12.5px; color: var(--ink-2); margin-bottom: 20px; line-height: 1.55; }
   .confirm-actions { display: flex; gap: 8px; justify-content: center; }
 
-  @media (prefers-reduced-motion: reduce) { .milestone-node.active .milestone-dot { animation: none; } *, *::before, *::after { transition: none !important; } }
+  @media (prefers-reduced-motion: reduce) {
+    .date-node.today .date-dot { animation: none; }
+    *, *::before, *::after { transition: none !important; }
+  }
 </style>
 </head>
 <body>
-<canvas id="bg-canvas"></canvas>
 <div class="app">
-  <!-- Topbar -->
   <header class="topbar">
     <div class="topbar-left">
       <div class="topbar-brand">
-        <div class="topbar-icon">🗓</div>
-        Timeline Planner
+        <span class="topbar-title">Timeline Planner</span>
         <span class="topbar-sub" id="topbar-sub"></span>
       </div>
-      <div class="timeline-tabs" id="timeline-tabs">
-        <!-- tabs rendered by JS -->
-      </div>
+      <div class="timeline-tabs" id="timeline-tabs"></div>
     </div>
     <div class="topbar-right">
       <div class="save-dot" id="save-dot" title="Saved"></div>
       <button class="btn btn-ghost" onclick="toggleAll(false)">Expand</button>
       <button class="btn btn-ghost" onclick="toggleAll(true)">Collapse</button>
-      <button class="btn btn-danger" onclick="openConfirmClear()" title="Clear current timeline">🗑 Clear</button>
+      <button class="btn btn-danger" onclick="openConfirmClear()">Clear</button>
       <button class="btn btn-primary" onclick="openAddMilestone()">＋ Milestone</button>
     </div>
   </header>
 
   <div class="main">
-    <!-- Timeline rail -->
     <div class="timeline-stage" id="timeline-stage">
       <div class="timeline-rail"></div>
       <div class="timeline-inner" id="timeline-inner"></div>
     </div>
-    <!-- Cards -->
     <div class="cards-area" id="cards-area">
       <div class="cards-viewport" id="cards-viewport"></div>
     </div>
@@ -301,10 +417,10 @@
       <div class="form-group"><label class="form-label">Title</label><input class="form-input" id="card-title" placeholder="Short, clear title…"></div>
       <div class="form-group"><label class="form-label">Type</label>
         <select class="form-select" id="card-type">
-          <option value="idea">💡 Idea</option>
-          <option value="task">✅ Task</option>
-          <option value="note">📝 Note</option>
-          <option value="risk">⚠️ Risk</option>
+          <option value="idea">Idea</option>
+          <option value="task">Task</option>
+          <option value="note">Note</option>
+          <option value="risk">Risk</option>
         </select>
       </div>
       <div class="form-group"><label class="form-label">Description</label><textarea class="form-textarea" id="card-desc" placeholder="Optional detail…"></textarea></div>
@@ -325,7 +441,11 @@
     </div>
     <div class="modal-body">
       <div class="form-group"><label class="form-label">Name</label><input class="form-input" id="ms-name" placeholder="e.g. Beta Launch"></div>
-      <div class="form-group"><label class="form-label">Date</label><input class="form-input" id="ms-date" type="date"></div>
+      <div class="form-group">
+        <label class="form-label">Date</label>
+        <input class="form-input" id="ms-date" type="date">
+        <span class="form-hint">Reuse a date that already exists to stack this milestone beneath it as a parallel track.</span>
+      </div>
       <div class="form-group"><label class="form-label">Label (optional)</label><input class="form-input" id="ms-label" placeholder="e.g. v2.0"></div>
     </div>
     <div class="modal-footer">
@@ -352,12 +472,12 @@
   </div>
 </div>
 
-<!-- Confirm Clear Modal -->
+<!-- Confirm Modal -->
 <div class="modal-overlay" id="confirm-modal">
   <div class="confirm-box">
     <div class="confirm-icon">⚠️</div>
     <div class="confirm-title" id="confirm-title">Clear this timeline?</div>
-    <div class="confirm-desc" id="confirm-desc">All milestones and cards will be permanently deleted. This cannot be undone.</div>
+    <div class="confirm-desc" id="confirm-desc">All milestones and cards will be permanently deleted.</div>
     <div class="confirm-actions">
       <button class="btn btn-ghost" onclick="closeConfirm()">Cancel</button>
       <button class="btn btn-danger" id="confirm-ok-btn" onclick="confirmOk()">Delete everything</button>
@@ -367,68 +487,39 @@
 
 <script>
 /* ── State ──────────────────────────── */
-let boards = {};          // { [id]: { name, milestones[] } }
-let activeBoard = null;   // current board id
-let selectedMsId = null;
-let currentMsId = null;   // for add-card modal
+let boards = {};
+let activeBoard = null;
+let selectedDate = null;     // selection is now per-DATE, not per-milestone
+let currentMsId = null;
 let confirmCallback = null;
 let saveTimer = null;
 
-const TYPE_ICONS = { idea:'💡', task:'✅', note:'📝', risk:'⚠️' };
 const TODAY = new Date().toISOString().slice(0,10);
-
-/* ── Canvas background ──────────────── */
-(function initCanvas() {
-  const canvas = document.getElementById('bg-canvas');
-  const ctx = canvas.getContext('2d');
-  let W, H, dots;
-  function resize() {
-    W = canvas.width  = window.innerWidth;
-    H = canvas.height = window.innerHeight;
-    dots = Array.from({length:55}, () => ({
-      x: Math.random()*W, y: Math.random()*H,
-      r: Math.random()*1.4+0.4,
-      vx: (Math.random()-0.5)*0.12, vy: (Math.random()-0.5)*0.12,
-      o: Math.random()*0.35+0.06
-    }));
-  }
-  function draw() {
-    ctx.clearRect(0,0,W,H);
-    for (const d of dots) {
-      ctx.beginPath();
-      ctx.arc(d.x, d.y, d.r, 0, Math.PI*2);
-      ctx.fillStyle = `rgba(91,156,246,${d.o})`;
-      ctx.fill();
-      d.x += d.vx; d.y += d.vy;
-      if (d.x < 0) d.x = W; if (d.x > W) d.x = 0;
-      if (d.y < 0) d.y = H; if (d.y > H) d.y = 0;
-    }
-    requestAnimationFrame(draw);
-  }
-  window.addEventListener('resize', resize);
-  resize(); draw();
-})();
 
 /* ── API ────────────────────────────── */
 async function loadAll() {
-  const r = await fetch('/api/board');
-  const d = await r.json();
-  // Support both old format {milestones:[]} and new {boards:{}, activeBoard:''}
-  if (d.boards) {
-    boards = d.boards;
-    activeBoard = d.activeBoard || Object.keys(d.boards)[0];
-  } else {
-    // Migrate old format
-    const id = 'board-default';
-    boards = { [id]: { name: 'My Timeline', milestones: d.milestones || [] } };
-    activeBoard = id;
+  try {
+    const r = await fetch('/api/board');
+    const d = await r.json();
+    if (d.boards) {
+      boards = d.boards;
+      activeBoard = d.activeBoard && d.boards[d.activeBoard] ? d.activeBoard : Object.keys(d.boards)[0];
+    } else {
+      const id = 'board-default';
+      boards = { [id]: { name: 'My Timeline', milestones: d.milestones || [] } };
+      activeBoard = id;
+    }
+    if (!activeBoard) { boards = { 'board-default': { name: 'My Timeline', milestones: [] } }; activeBoard = 'board-default'; }
+  } catch (e) {
+    boards = { 'board-default': { name: 'My Timeline', milestones: [] } };
+    activeBoard = 'board-default';
   }
   render();
 }
 
 function scheduleSave() {
   const dot = document.getElementById('save-dot');
-  dot.className = 'save-dot saving';
+  if (dot) { dot.className = 'save-dot saving'; dot.title = 'Saving…'; }
   clearTimeout(saveTimer);
   saveTimer = setTimeout(async () => {
     try {
@@ -436,53 +527,74 @@ function scheduleSave() {
         method: 'POST', headers: {'Content-Type':'application/json'},
         body: JSON.stringify({ boards, activeBoard })
       });
-      dot.className = 'save-dot saved';
-      setTimeout(() => dot.className = 'save-dot', 2000);
-    } catch { dot.className = 'save-dot'; }
-  }, 700);
+      if (dot) { dot.className = 'save-dot saved'; dot.title = 'All changes saved'; }
+      setTimeout(() => { if (dot) dot.className = 'save-dot'; }, 1800);
+    } catch { if (dot) { dot.className = 'save-dot'; dot.title = 'Save failed'; } }
+  }, 650);
 }
 
 function currentBoard() { return boards[activeBoard] || { name:'', milestones:[] }; }
+
+/* Group milestones by date → [{date, items:[ms,...]}], sorted */
+function groupedByDate() {
+  const map = new Map();
+  for (const ms of currentBoard().milestones) {
+    if (!map.has(ms.date)) map.set(ms.date, []);
+    map.get(ms.date).push(ms);
+  }
+  return [...map.entries()]
+    .sort((a,b) => a[0].localeCompare(b[0]))
+    .map(([date, items]) => ({ date, items }));
+}
 
 /* ── Render ─────────────────────────── */
 function render() { renderTabs(); renderTimeline(); renderCards(); updateSub(); }
 
 function renderTabs() {
-  const container = document.getElementById('timeline-tabs');
-  container.innerHTML = '';
+  const c = document.getElementById('timeline-tabs');
+  c.innerHTML = '';
   Object.entries(boards).forEach(([id, b]) => {
     const btn = document.createElement('button');
     btn.className = 'timeline-tab' + (id === activeBoard ? ' active' : '');
     btn.textContent = b.name;
+    btn.title = b.name;
     btn.onclick = () => switchBoard(id);
-    container.appendChild(btn);
+    c.appendChild(btn);
   });
-  const addBtn = document.createElement('button');
-  addBtn.className = 'timeline-tab-add';
-  addBtn.title = 'New timeline';
-  addBtn.textContent = '+';
-  addBtn.onclick = openTlModal;
-  container.appendChild(addBtn);
+  const add = document.createElement('button');
+  add.className = 'timeline-tab-add';
+  add.title = 'New timeline';
+  add.textContent = '+';
+  add.onclick = openTlModal;
+  c.appendChild(add);
 }
 
 function renderTimeline() {
   const inner = document.getElementById('timeline-inner');
   inner.innerHTML = '';
-  currentBoard().milestones.forEach(ms => {
-    const isActive = ms.date === TODAY;
-    const isSelected = ms.id === selectedMsId;
+  groupedByDate().forEach(group => {
+    const isToday = group.date === TODAY;
+    const isSel = group.date === selectedDate;
     const wrap = document.createElement('div');
-    wrap.className = 'milestone-spacing';
+    wrap.className = 'date-spacing';
+
     const node = document.createElement('div');
-    node.className = 'milestone-node' + (isActive ? ' active':'') + (isSelected ? ' selected':'');
-    node.onclick = () => selectMilestone(ms.id);
+    node.className = 'date-node' + (isToday ? ' today' : '') + (isSel ? ' selected' : '');
+    node.onclick = () => selectDate(group.date);
+
+    const names = group.items.slice(0, 2)
+      .map(m => `<div class="date-name-row">${esc(m.name)}</div>`).join('');
+    const more = group.items.length > 2 ? `<div class="date-name-row" style="color:var(--ink-3);font-weight:500">+${group.items.length - 2} more</div>` : '';
+    const countPill = group.items.length > 1
+      ? `<span class="date-count">${group.items.length} tracks</span>` : '';
+
     node.innerHTML = `
-      ${isActive ? '<span class="today-badge">TODAY</span>' : ''}
-      <div class="milestone-dot"></div>
-      <div class="milestone-label">
-        <div class="milestone-date">${fmtDate(ms.date)}</div>
-        <div class="milestone-name">${esc(ms.name)}</div>
-        ${ms.label ? `<span class="milestone-badge">${esc(ms.label)}</span>` : ''}
+      ${isToday ? '<span class="today-badge">Today</span>' : ''}
+      <div class="date-dot"></div>
+      <div class="date-label">
+        <div class="date-text">${fmtDate(group.date)}</div>
+        <div class="date-names">${names}${more}</div>
+        ${countPill}
       </div>`;
     wrap.appendChild(node);
     inner.appendChild(wrap);
@@ -492,79 +604,150 @@ function renderTimeline() {
 function renderCards() {
   const vp = document.getElementById('cards-viewport');
   vp.innerHTML = '';
-  currentBoard().milestones.forEach(ms => {
-    const isSelected = ms.id === selectedMsId;
-    const isDimmed = selectedMsId && !isSelected;
+  const groups = groupedByDate();
+
+  if (!groups.length) {
+    vp.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-title">Nothing on this timeline yet</div>
+        <div class="empty-state-desc">Add a milestone to get started. Give two milestones the same date and they'll stack as parallel tracks on that point of the timeline.</div>
+      </div>`;
+    return;
+  }
+
+  groups.forEach(group => {
+    const isDimmed = selectedDate && group.date !== selectedDate;
     const col = document.createElement('div');
-    col.className = 'milestone-col' + (isDimmed ? ' dimmed' : '');
-    col.setAttribute('data-id', ms.id);
-    const ideas = ms.cards.filter(c => c.type === 'idea');
-    const tasks  = ms.cards.filter(c => c.type !== 'idea');
-    if (ideas.length) { col.innerHTML += `<div class="col-label">Ideas</div>`; ideas.forEach(c => col.appendChild(buildCard(c, ms.id))); }
-    col.innerHTML += `<button class="add-btn" onclick="openAddCard('${ms.id}','idea')">＋ idea</button>`;
-    if (tasks.length) { col.innerHTML += `<div class="col-label" style="margin-top:4px">Tasks & Notes</div>`; tasks.forEach(c => col.appendChild(buildCard(c, ms.id))); }
-    col.innerHTML += `<button class="add-btn" onclick="openAddCard('${ms.id}','task')">＋ task / note</button>`;
+    col.className = 'date-col' + (isDimmed ? ' dimmed' : '');
+    col.setAttribute('data-date', group.date);
+
+    group.items.forEach(ms => {
+      col.appendChild(buildMsGroup(ms, group.date));
+    });
+
     vp.appendChild(col);
   });
 }
 
+function buildMsGroup(ms, date) {
+  const box = document.createElement('div');
+  box.className = 'ms-group' + (date === selectedDate ? ' is-selected' : '');
+  box.setAttribute('data-ms-id', ms.id);
+
+  const head = document.createElement('div');
+  head.className = 'ms-group-head';
+  head.onclick = (e) => { if (!e.target.closest('.ms-group-del')) selectDate(date); };
+  head.innerHTML = `
+    <span class="ms-group-title">${esc(ms.name)}</span>
+    ${ms.label ? `<span class="ms-group-badge">${esc(ms.label)}</span>` : ''}
+    <button class="ms-group-del" title="Delete milestone" onclick="deleteMilestone('${ms.id}')">✕</button>`;
+  box.appendChild(head);
+
+  const body = document.createElement('div');
+  body.className = 'ms-group-body';
+
+  const ideas = ms.cards.filter(c => c.type === 'idea');
+  const tasks = ms.cards.filter(c => c.type !== 'idea');
+
+  if (ideas.length) {
+    const l = document.createElement('div'); l.className = 'col-label'; l.textContent = 'Ideas';
+    body.appendChild(l);
+    ideas.forEach(c => body.appendChild(buildCard(c, ms.id)));
+  }
+  const addIdea = document.createElement('button');
+  addIdea.className = 'add-btn';
+  addIdea.textContent = '＋ idea';
+  addIdea.onclick = () => openAddCard(ms.id, 'idea');
+  body.appendChild(addIdea);
+
+  if (tasks.length) {
+    const l = document.createElement('div'); l.className = 'col-label'; l.textContent = 'Tasks & Notes';
+    body.appendChild(l);
+    tasks.forEach(c => body.appendChild(buildCard(c, ms.id)));
+  }
+  const addTask = document.createElement('button');
+  addTask.className = 'add-btn';
+  addTask.textContent = '＋ task / note';
+  addTask.onclick = () => openAddCard(ms.id, 'task');
+  body.appendChild(addTask);
+
+  box.appendChild(body);
+  return box;
+}
+
 function buildCard(card, msId) {
   const el = document.createElement('div');
-  el.className = `card card-type-${card.type}${card.collapsed?' collapsed':''}`;
+  el.className = `card card-type-${card.type}${card.collapsed ? ' collapsed' : ''}`;
   el.setAttribute('data-card-id', card.id);
+
   const hasTasks = card.tasks?.length > 0;
-  const doneCount = hasTasks ? card.tasks.filter(t=>t.done).length : 0;
-  const taskSum = hasTasks ? ` <span style="font-size:10px;color:var(--text-3);margin-left:3px">${doneCount}/${card.tasks.length}</span>` : '';
+  const done = hasTasks ? card.tasks.filter(t => t.done).length : 0;
+  const countHtml = hasTasks ? `<span class="card-count">${done}/${card.tasks.length}</span>` : '';
+
   let body = '';
   if (card.desc) body += `<p class="card-desc">${esc(card.desc)}</p>`;
   if (hasTasks) {
     body += '<ul class="checklist">';
-    card.tasks.forEach((t,ti) => { body += `<li class="checklist-item${t.done?' done':''}"><input type="checkbox" ${t.done?'checked':''} onchange="toggleTask('${card.id}',${ti},'${msId}',this.checked)"><span>${esc(t.text)}</span></li>`; });
+    card.tasks.forEach((t, ti) => {
+      body += `<li class="checklist-item${t.done ? ' done' : ''}"><input type="checkbox" ${t.done ? 'checked' : ''} onchange="toggleTask('${card.id}',${ti},'${msId}',this.checked)"><span>${esc(t.text)}</span></li>`;
+    });
     body += '</ul>';
   }
   if (!card.desc && !hasTasks) body += `<span class="empty-hint">No detail yet.</span>`;
+
   el.innerHTML = `
     <div class="card-header" onclick="toggleCard('${card.id}','${msId}')">
-      <div class="card-dot"></div>
-      <span class="card-title">${esc(card.title)}${taskSum}</span>
-      <span class="card-chevron"><svg viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <span class="card-title">${esc(card.title)}${countHtml}</span>
+      <span class="card-chevron"><svg viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
     </div>
     <div class="card-body"><div class="card-body-inner">
       ${body}
-      <span class="card-tag tag-${card.type}">${TYPE_ICONS[card.type]||''} ${card.type}</span>
+      <span class="card-tag tag-${card.type}">${card.type}</span>
     </div></div>`;
   return el;
 }
 
 function updateSub() {
-  const el = document.querySelector('.topbar-sub');
+  const el = document.getElementById('topbar-sub');
   if (!el) return;
-  const ms = currentBoard().milestones;
+  const g = groupedByDate();
+  if (!g.length) { el.textContent = ''; return; }
   const fmt = s => new Date(s+'T12:00:00').toLocaleDateString('en-GB',{month:'short',year:'numeric'});
-  el.textContent = ms.length ? `${fmt(ms[0].date)} → ${fmt(ms[ms.length-1].date)}` : '';
+  el.textContent = `${fmt(g[0].date)} → ${fmt(g[g.length-1].date)}`;
 }
 
-/* ── Selection ──────────────────────── */
-function selectMilestone(msId) {
-  const b = currentBoard();
-  const ms = b.milestones.find(m => m.id === msId);
-  if (!ms) return;
-  if (selectedMsId === msId) {
-    selectedMsId = null;
-    ms.cards.forEach(c => c.collapsed = true);
+/* ── Selection (per date) ───────────── */
+function findMs(id) { return currentBoard().milestones.find(m => m.id === id); }
+
+function selectDate(date) {
+  const msOnDate = currentBoard().milestones.filter(m => m.date === date);
+  if (!msOnDate.length) return;
+
+  if (selectedDate === date) {
+    selectedDate = null;
+    msOnDate.forEach(ms => ms.cards.forEach(c => c.collapsed = true));
   } else {
-    if (selectedMsId) { const prev = b.milestones.find(m=>m.id===selectedMsId); if(prev) prev.cards.forEach(c=>c.collapsed=true); }
-    selectedMsId = msId;
-    ms.cards.forEach(c => c.collapsed = false);
+    if (selectedDate) {
+      currentBoard().milestones
+        .filter(m => m.date === selectedDate)
+        .forEach(ms => ms.cards.forEach(c => c.collapsed = true));
+    }
+    selectedDate = date;
+    msOnDate.forEach(ms => ms.cards.forEach(c => c.collapsed = false));
   }
   render();
-  if (selectedMsId) setTimeout(() => document.querySelector(`#cards-viewport [data-id="${msId}"]`)?.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'}), 40);
+  if (selectedDate) {
+    setTimeout(() => {
+      document.querySelector(`#cards-viewport [data-date="${date}"]`)
+        ?.scrollIntoView({ behavior:'smooth', inline:'center', block:'nearest' });
+    }, 40);
+  }
   scheduleSave();
 }
 
 /* ── Card interactions ──────────────── */
 function toggleCard(cardId, msId) {
-  const card = currentBoard().milestones.find(m=>m.id===msId)?.cards.find(c=>c.id===cardId);
+  const card = findMs(msId)?.cards.find(c => c.id === cardId);
   if (!card) return;
   card.collapsed = !card.collapsed;
   document.querySelector(`[data-card-id="${cardId}"]`)?.classList.toggle('collapsed', card.collapsed);
@@ -573,15 +756,20 @@ function toggleCard(cardId, msId) {
 
 function toggleAll(collapse) {
   currentBoard().milestones.forEach(ms => ms.cards.forEach(c => c.collapsed = collapse));
-  selectedMsId = null; render(); scheduleSave();
+  selectedDate = null;
+  render();
+  scheduleSave();
 }
 
 function toggleTask(cardId, ti, msId, checked) {
-  const card = currentBoard().milestones.find(m=>m.id===msId)?.cards.find(c=>c.id===cardId);
+  const card = findMs(msId)?.cards.find(c => c.id === cardId);
   if (!card) return;
   card.tasks[ti].done = checked;
-  const el = document.querySelector(`[data-card-id="${cardId}"] .card-title`);
-  if (el) { const d = card.tasks.filter(t=>t.done).length; el.innerHTML = `${esc(card.title)} <span style="font-size:10px;color:var(--text-3);margin-left:3px">${d}/${card.tasks.length}</span>`; }
+  const titleEl = document.querySelector(`[data-card-id="${cardId}"] .card-title`);
+  if (titleEl) {
+    const d = card.tasks.filter(t => t.done).length;
+    titleEl.innerHTML = `${esc(card.title)}<span class="card-count">${d}/${card.tasks.length}</span>`;
+  }
   document.querySelectorAll(`[data-card-id="${cardId}"] .checklist-item`)[ti]?.classList.toggle('done', checked);
   scheduleSave();
 }
@@ -589,8 +777,8 @@ function toggleTask(cardId, ti, msId, checked) {
 /* ── Add card ───────────────────────── */
 function openAddCard(msId, type='idea') {
   currentMsId = msId;
-  const ms = currentBoard().milestones.find(m=>m.id===msId);
-  document.getElementById('card-modal-title').textContent = `Add to "${ms?.name}"`;
+  const ms = findMs(msId);
+  document.getElementById('card-modal-title').textContent = `Add to "${ms?.name ?? ''}"`;
   document.getElementById('card-title').value = '';
   document.getElementById('card-desc').value = '';
   document.getElementById('card-type').value = type;
@@ -601,15 +789,21 @@ function closeCardModal() { document.getElementById('card-modal').classList.remo
 function saveCard() {
   const title = document.getElementById('card-title').value.trim();
   if (!title) { document.getElementById('card-title').focus(); return; }
-  const ms = currentBoard().milestones.find(m=>m.id===currentMsId);
+  const ms = findMs(currentMsId);
   if (!ms) return;
-  ms.cards.push({ id:'c'+Date.now(), type: document.getElementById('card-type').value, title, desc: document.getElementById('card-desc').value.trim(), tasks:[], collapsed:false });
+  ms.cards.push({
+    id: 'c' + Date.now(),
+    type: document.getElementById('card-type').value,
+    title,
+    desc: document.getElementById('card-desc').value.trim(),
+    tasks: [], collapsed: false
+  });
   closeCardModal(); render(); scheduleSave();
 }
 
-/* ── Add milestone ──────────────────── */
+/* ── Add / delete milestone ─────────── */
 function openAddMilestone() {
-  document.getElementById('ms-date').value = TODAY;
+  document.getElementById('ms-date').value = selectedDate || TODAY;
   document.getElementById('ms-name').value = '';
   document.getElementById('ms-label').value = '';
   document.getElementById('ms-modal').classList.add('open');
@@ -619,15 +813,33 @@ function closeMsModal() { document.getElementById('ms-modal').classList.remove('
 function saveMilestone() {
   const name = document.getElementById('ms-name').value.trim();
   if (!name) { document.getElementById('ms-name').focus(); return; }
-  const dateVal = document.getElementById('ms-date').value || TODAY;
-  currentBoard().milestones.push({ id:'m'+Date.now(), name, date: dateVal, label: document.getElementById('ms-label').value.trim(), isToday: dateVal===TODAY, cards:[] });
-  currentBoard().milestones.sort((a,b) => a.date.localeCompare(b.date));
+  const date = document.getElementById('ms-date').value || TODAY;
+  currentBoard().milestones.push({
+    id: 'm' + Date.now() + Math.random().toString(36).slice(2,6),
+    name, date,
+    label: document.getElementById('ms-label').value.trim(),
+    cards: []
+  });
   closeMsModal(); render(); scheduleSave();
 }
 
-/* ── Timeline management ────────────── */
-function switchBoard(id) { activeBoard = id; selectedMsId = null; render(); scheduleSave(); }
+function deleteMilestone(msId) {
+  const ms = findMs(msId);
+  if (!ms) return;
+  document.getElementById('confirm-title').textContent = `Delete "${ms.name}"?`;
+  document.getElementById('confirm-desc').textContent = 'This milestone and all of its ideas and tasks will be removed.';
+  document.getElementById('confirm-ok-btn').textContent = 'Delete milestone';
+  confirmCallback = () => {
+    const b = currentBoard();
+    b.milestones = b.milestones.filter(m => m.id !== msId);
+    if (!b.milestones.some(m => m.date === selectedDate)) selectedDate = null;
+    render(); scheduleSave();
+  };
+  document.getElementById('confirm-modal').classList.add('open');
+}
 
+/* ── Timelines ──────────────────────── */
+function switchBoard(id) { activeBoard = id; selectedDate = null; render(); scheduleSave(); }
 function openTlModal() {
   document.getElementById('tl-name').value = '';
   document.getElementById('tl-modal').classList.add('open');
@@ -639,20 +851,19 @@ function saveTimeline() {
   if (!name) { document.getElementById('tl-name').focus(); return; }
   const id = 'board-' + Date.now();
   boards[id] = { name, milestones: [] };
-  activeBoard = id;
-  selectedMsId = null;
+  activeBoard = id; selectedDate = null;
   closeTlModal(); render(); scheduleSave();
 }
 
 /* ── Clear / confirm ────────────────── */
 function openConfirmClear() {
-  const name = currentBoard().name;
-  document.getElementById('confirm-title').textContent = `Clear "${name}"?`;
-  document.getElementById('confirm-desc').textContent = 'All milestones and cards will be permanently deleted. This cannot be undone.';
+  document.getElementById('confirm-title').textContent = `Clear "${currentBoard().name}"?`;
+  document.getElementById('confirm-desc').textContent = 'All milestones and cards on this timeline will be permanently deleted.';
   document.getElementById('confirm-ok-btn').textContent = 'Delete everything';
   confirmCallback = () => {
     boards[activeBoard].milestones = [];
-    selectedMsId = null; render(); scheduleSave();
+    selectedDate = null;
+    render(); scheduleSave();
   };
   document.getElementById('confirm-modal').classList.add('open');
 }
@@ -666,21 +877,33 @@ function syncScroll() {
   const inner = document.getElementById('timeline-inner');
   const vp    = document.getElementById('cards-viewport');
   let sl = false, cl = false;
-  stage.addEventListener('scroll', () => { if(cl) return; sl=true; const r=stage.scrollLeft/(inner.scrollWidth-stage.clientWidth||1); area.scrollLeft=r*(vp.scrollWidth-area.clientWidth); requestAnimationFrame(()=>sl=false); });
-  area.addEventListener('scroll',  () => { if(sl) return; cl=true; const r=area.scrollLeft/(vp.scrollWidth-area.clientWidth||1); stage.scrollLeft=r*(inner.scrollWidth-stage.clientWidth); requestAnimationFrame(()=>cl=false); });
+  stage.addEventListener('scroll', () => {
+    if (cl) return; sl = true;
+    const r = stage.scrollLeft / (inner.scrollWidth - stage.clientWidth || 1);
+    area.scrollLeft = r * (vp.scrollWidth - area.clientWidth);
+    requestAnimationFrame(() => sl = false);
+  });
+  area.addEventListener('scroll', () => {
+    if (sl) return; cl = true;
+    const r = area.scrollLeft / (vp.scrollWidth - area.clientWidth || 1);
+    stage.scrollLeft = r * (inner.scrollWidth - stage.clientWidth);
+    requestAnimationFrame(() => cl = false);
+  });
 }
 
-/* ── Keyboard ───────────────────────── */
+/* ── Keyboard / overlay dismiss ─────── */
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') { closeCardModal(); closeMsModal(); closeTlModal(); closeConfirm(); }
 });
 ['card-modal','ms-modal','tl-modal','confirm-modal'].forEach(id => {
-  document.getElementById(id).addEventListener('click', e => { if (e.target === e.currentTarget) { closeCardModal(); closeMsModal(); closeTlModal(); closeConfirm(); } });
+  document.getElementById(id).addEventListener('click', e => {
+    if (e.target === e.currentTarget) { closeCardModal(); closeMsModal(); closeTlModal(); closeConfirm(); }
+  });
 });
 
 /* ── Utils ──────────────────────────── */
 function fmtDate(s) { return new Date(s+'T12:00:00').toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'2-digit'}); }
-function esc(s) { return s?.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') ?? ''; }
+function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 /* ── Init ───────────────────────────── */
 loadAll();
