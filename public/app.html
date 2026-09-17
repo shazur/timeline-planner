@@ -19,7 +19,7 @@
 
     --ink:          #23211E;
     --ink-2:        #5C5852;
-    --ink-3:        #96918A;
+    --ink-3:        #7D7871;
 
     --indigo:       #4F46B8;
     --indigo-soft:  #EDEBF8;
@@ -137,6 +137,7 @@
 
   /* ── TIMELINE RAIL ────────────────── */
   .timeline-stage {
+    position: relative;
     flex-shrink: 0; height: 118px;
     overflow-x: auto; overflow-y: visible;
     background: linear-gradient(180deg, rgba(255,255,255,0.7), rgba(255,255,255,0.35));
@@ -218,7 +219,7 @@
   }
 
   /* ── CARDS AREA ───────────────────── */
-  .cards-area { flex: 1; overflow: auto; padding: 22px 0 40px; scrollbar-width: thin; scrollbar-color: var(--line-2) transparent; }
+  .cards-area { flex: 1; overflow: auto; padding: 22px 0 40px; scrollbar-width: thin; scrollbar-color: var(--line-2) transparent; align-content: start; }
   .cards-area::-webkit-scrollbar { width: 8px; height: 8px; }
   .cards-area::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 4px; border: 2px solid var(--paper); }
   .cards-viewport { display: flex; min-width: max-content; padding: 0 80px; align-items: flex-start; }
@@ -397,8 +398,9 @@
 
   <div class="main">
     <div class="timeline-stage" id="timeline-stage">
-      <div class="timeline-rail"></div>
-      <div class="timeline-inner" id="timeline-inner"></div>
+      <div class="timeline-inner" id="timeline-inner">
+        <div class="timeline-rail"></div>
+      </div>
     </div>
     <div class="cards-area" id="cards-area">
       <div class="cards-viewport" id="cards-viewport"></div>
@@ -571,7 +573,7 @@ function renderTabs() {
 
 function renderTimeline() {
   const inner = document.getElementById('timeline-inner');
-  inner.innerHTML = '';
+  inner.innerHTML = '<div class="timeline-rail"></div>';
   groupedByDate().forEach(group => {
     const isToday = group.date === TODAY;
     const isSel = group.date === selectedDate;
