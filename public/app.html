@@ -225,6 +225,28 @@
   .ms-group:hover { box-shadow: var(--shadow-3); border-color: var(--line-2); }
   .ms-group.is-selected { border-color: var(--plum-line); box-shadow: 0 0 0 3px var(--plum-soft), var(--shadow-3); }
   .ms-group.dimmed { opacity: 0.3; }
+  /* ── DRAG TO REORDER ──────────────── */
+  .ms-drag {
+    flex-shrink: 0; cursor: grab;
+    color: var(--ink-3); font-size: 13px; line-height: 1;
+    padding: 2px 3px; margin-left: -2px; border-radius: 4px;
+    letter-spacing: -1px; user-select: none;
+    transition: var(--t);
+  }
+  .ms-drag:hover { background: var(--indigo-soft); color: var(--indigo); }
+  .ms-drag:active { cursor: grabbing; }
+  .ms-group.dragging {
+    z-index: 30;
+    box-shadow: 0 18px 44px rgba(35,33,30,0.22);
+    border-color: var(--indigo);
+    transform: rotate(-0.4deg);
+    cursor: grabbing;
+    transition: none;
+  }
+  .ms-group.drop-target { box-shadow: 0 0 0 2px var(--indigo-line), var(--shadow-2); }
+  body.is-reordering { cursor: grabbing; user-select: none; }
+  body.is-reordering .canvas { cursor: grabbing; }
+
   .ms-group-head {
     display: flex; align-items: flex-start; gap: 8px;
     padding: 10px 12px;
@@ -664,15 +686,26 @@ function buildMsGroup(ms, date) {
   const box = document.createElement('div');
   box.className = 'ms-group' + (date === selectedDate ? ' is-selected' : '');
   box.setAttribute('data-ms-id', ms.id);
+  box.setAttribute('data-date', date);
+
+  const siblings = currentBoard().milestones.filter(m => m.date === date).length;
 
   const head = document.createElement('div');
   head.className = 'ms-group-head';
-  head.onclick = (e) => { if (!e.target.closest('.ms-group-del')) selectDate(date); };
+  head.onclick = (e) => {
+    if (e.target.closest('.ms-group-del') || e.target.closest('.ms-drag')) return;
+    if (dragState && dragState.moved) return;
+    selectDate(date);
+  };
   head.innerHTML = `
+    ${siblings > 1 ? `<span class="ms-drag" title="Drag to reorder on this date">⠿</span>` : ''}
     <span class="ms-group-title">${esc(ms.name)}</span>
     ${ms.label ? `<span class="ms-group-badge">${esc(ms.label)}</span>` : ''}
     <button class="ms-group-del" title="Delete milestone" onclick="deleteMilestone('${ms.id}')">✕</button>`;
   box.appendChild(head);
+
+  const handle = head.querySelector('.ms-drag');
+  if (handle) handle.addEventListener('mousedown', e => startReorder(e, ms.id, date));
 
   const body = document.createElement('div');
   body.className = 'ms-group-body';
@@ -907,7 +940,8 @@ function initPan() {
 
   canvas.addEventListener('mousedown', e => {
     if (e.button !== 0) return;
-    if (e.target.closest('.card, .add-btn, .ms-group-head, .date-marker, button, input, a, .checklist-item')) return;
+    if (dragState) return;
+    if (e.target.closest('.card, .add-btn, .ms-group-head, .ms-drag, .date-marker, button, input, a, .checklist-item')) return;
     down = true; moved = false;
     sx = e.clientX; sy = e.clientY;
     sl = canvas.scrollLeft; st = canvas.scrollTop;
@@ -942,6 +976,106 @@ document.addEventListener('keydown', e => {
     if (e.target === e.currentTarget) { closeCardModal(); closeMsModal(); closeTlModal(); closeConfirm(); }
   });
 });
+
+
+/* ── Drag to reorder milestones within one date's vertical axis ── */
+let dragState = null;
+
+function startReorder(e, msId, date) {
+  if (e.button !== 0) return;
+  e.preventDefault();
+  e.stopPropagation();
+
+  const panel = document.querySelector(`.ms-group[data-ms-id="${msId}"]`);
+  if (!panel) return;
+
+  // Every panel on this date, in current visual order (top to bottom)
+  const peers = [...document.querySelectorAll(`.ms-group[data-date="${date}"]`)]
+    .map(el => ({ el, id: el.getAttribute('data-ms-id'), top: parseFloat(el.style.top), h: el.offsetHeight }))
+    .sort((a, b) => a.top - b.top);
+
+  dragState = {
+    msId, date, peers, moved: false,
+    startY: e.clientY,
+    originTop: parseFloat(panel.style.top),
+    panel,
+    fromVisual: peers.findIndex(p => p.id === msId)
+  };
+
+  panel.classList.add('dragging');
+  document.body.classList.add('is-reordering');
+}
+
+window.addEventListener('mousemove', e => {
+  if (!dragState) return;
+  const dy = e.clientY - dragState.startY;
+  if (Math.abs(dy) > 3) dragState.moved = true;
+  dragState.panel.style.top = (dragState.originTop + dy) + 'px';
+
+  // Which slot is the dragged panel's centre currently over?
+  const centre = dragState.originTop + dy + dragState.panel.offsetHeight / 2;
+  let target = 0;
+  for (let i = 0; i < dragState.peers.length; i++) {
+    const p = dragState.peers[i];
+    if (centre > p.top + p.h / 2) target = i;
+  }
+  dragState.toVisual = target;
+
+  // preview: outline the slot we'd drop into
+  dragState.peers.forEach((p, i) => p.el.classList.toggle('drop-target',
+    i === target && p.id !== dragState.msId));
+});
+
+window.addEventListener('mouseup', () => {
+  if (!dragState) return;
+  const { msId, date, fromVisual, toVisual, moved, panel, peers } = dragState;
+  panel.classList.remove('dragging');
+  document.body.classList.remove('is-reordering');
+  peers.forEach(p => p.el.classList.remove('drop-target'));
+
+  if (moved && toVisual != null && toVisual !== fromVisual) {
+    applyReorder(date, fromVisual, toVisual);
+  } else {
+    render(); // snap back
+  }
+  const st = dragState;
+  dragState = null;
+  // let the click handler see that a drag happened, then clear
+  setTimeout(() => { if (!dragState) st.moved = false; }, 0);
+});
+
+/* Visual order maps to array order: index 1 renders ABOVE the axis, so the
+   visual top-to-bottom sequence for n items is [1, 0, 2, 3, ...]. Convert
+   between the two so a drag reorders the underlying array correctly. */
+function visualSequence(n) {
+  if (n <= 1) return [0];
+  const seq = [1, 0];
+  for (let i = 2; i < n; i++) seq.push(i);
+  return seq;
+}
+
+function applyReorder(date, fromVisual, toVisual) {
+  const b = currentBoard();
+  const onDate = b.milestones.filter(m => m.date === date);
+  const n = onDate.length;
+  const seq = visualSequence(n);
+
+  // current array order, arranged visually
+  const visual = seq.map(i => onDate[i]);
+  const [moved] = visual.splice(fromVisual, 1);
+  visual.splice(toVisual, 0, moved);
+
+  // write back: visual position k belongs at array index seq[k]
+  const reordered = new Array(n);
+  visual.forEach((ms, k) => { reordered[seq[k]] = ms; });
+
+  // splice the new order back into the board, preserving other dates
+  let ptr = 0;
+  b.milestones = b.milestones.map(m => m.date === date ? reordered[ptr++] : m);
+
+  render();
+  scheduleSave();
+}
 
 /* ── Utils ──────────────────────────── */
 function fmtDate(s) { return new Date(s+'T12:00:00').toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'2-digit'}); }
