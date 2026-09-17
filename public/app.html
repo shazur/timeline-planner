@@ -451,7 +451,7 @@
           <option value="risk">Risk</option>
         </select>
       </div>
-      <div class="form-group"><label class="form-label">Description</label><textarea class="form-textarea" id="card-desc" placeholder="Optional detail…"></textarea></div>
+      <div class="form-group"><label class="form-label">Description</label><textarea class="form-textarea" id="card-desc" placeholder="Optional detail…"></textarea><span class="form-hint">Enter adds a line break here — press \u2318/Ctrl + Enter to add the item.</span></div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeCardModal()">Cancel</button>
@@ -1033,7 +1033,23 @@ function initPan() {
 
 /* ── Keyboard / overlay dismiss ─────── */
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closeCardModal(); closeMsModal(); closeTlModal(); closeConfirm(); }
+  if (e.key === 'Escape') { closeCardModal(); closeMsModal(); closeTlModal(); closeConfirm(); return; }
+  if (e.key !== 'Enter') return;
+
+  // Which dialog is open? (only one ever is)
+  const open = ['confirm-modal','card-modal','ms-modal','tl-modal']
+    .find(id => document.getElementById(id).classList.contains('open'));
+  if (!open) return;
+
+  // In a textarea, plain Enter means newline; Cmd/Ctrl+Enter submits.
+  const inTextarea = e.target && e.target.tagName === 'TEXTAREA';
+  if (inTextarea && !(e.metaKey || e.ctrlKey)) return;
+
+  e.preventDefault();
+  if (open === 'confirm-modal') confirmOk();
+  else if (open === 'card-modal') saveCard();
+  else if (open === 'ms-modal')   saveMilestone();
+  else if (open === 'tl-modal')   saveTimeline();
 });
 ['card-modal','ms-modal','tl-modal','confirm-modal'].forEach(id => {
   document.getElementById(id).addEventListener('click', e => {
