@@ -130,6 +130,8 @@
   .btn-ghost:hover { background: var(--surface-2); color: var(--ink); border-color: var(--line-2); }
   .btn-danger { background: var(--clay-soft); color: var(--clay); border-color: var(--clay-line); }
   .btn-danger:hover { background: #F6DFDA; }
+  .btn-danger-solid { background: var(--clay); color: #fff; border-color: var(--clay); box-shadow: var(--shadow-1); }
+  .btn-danger-solid:hover { background: #9A4536; }
   .btn-primary { background: var(--indigo); color: #fff; box-shadow: var(--shadow-1); }
   .btn-primary:hover { background: #5B52C7; }
 
@@ -482,7 +484,7 @@
     <div class="confirm-desc" id="confirm-desc">All milestones and cards will be permanently deleted.</div>
     <div class="confirm-actions">
       <button class="btn btn-ghost" onclick="closeConfirm()">Cancel</button>
-      <button class="btn btn-danger" id="confirm-ok-btn" onclick="confirmOk()">Delete everything</button>
+      <button class="btn btn-danger-solid" id="confirm-ok-btn" onclick="confirmOk()">Delete everything</button>
     </div>
   </div>
 </div>
