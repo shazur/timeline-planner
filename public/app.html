@@ -99,14 +99,29 @@
     border-radius: var(--r-md); padding: 3px; min-width: 0;
   }
   .timeline-tab {
-    padding: 4px 12px; border-radius: 7px;
-    font-family: var(--font-ui); font-size: 12px; font-weight: 500;
-    cursor: pointer; border: none; background: transparent; color: var(--ink-2);
-    transition: var(--t); white-space: nowrap;
-    max-width: 160px; overflow: hidden; text-overflow: ellipsis;
+    display: flex; align-items: center; gap: 2px;
+    border-radius: 7px; background: transparent;
+    transition: var(--t); max-width: 190px;
   }
-  .timeline-tab.active { background: var(--surface); color: var(--ink); box-shadow: var(--shadow-1); font-weight: 600; }
-  .timeline-tab:hover:not(.active) { background: rgba(35,33,30,0.04); color: var(--ink); }
+  .timeline-tab.active { background: var(--surface); box-shadow: var(--shadow-1); }
+  .timeline-tab:hover:not(.active) { background: rgba(35,33,30,0.04); }
+  .timeline-tab-label {
+    padding: 4px 4px 4px 12px; border: none; background: transparent;
+    font-family: var(--font-ui); font-size: 12px; font-weight: 500; color: var(--ink-2);
+    cursor: pointer; transition: var(--t); white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis; max-width: 150px;
+  }
+  .timeline-tab.active .timeline-tab-label { color: var(--ink); font-weight: 600; }
+  .timeline-tab:hover .timeline-tab-label { color: var(--ink); }
+  .timeline-tab-del {
+    width: 17px; height: 17px; margin-right: 5px; flex-shrink: 0;
+    border: none; background: transparent; color: var(--ink-3);
+    font-size: 14px; line-height: 1; border-radius: 4px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: var(--t);
+  }
+  .timeline-tab:hover .timeline-tab-del, .timeline-tab.active .timeline-tab-del { opacity: 1; }
+  .timeline-tab-del:hover { background: var(--clay-soft); color: var(--clay); }
   .timeline-tab-add {
     width: 26px; height: 26px; border-radius: 7px; border: none;
     background: transparent; color: var(--ink-3); font-size: 17px; line-height: 1;
@@ -558,13 +573,28 @@ function groupedByDate() {
 function renderTabs() {
   const c = document.getElementById('timeline-tabs');
   c.innerHTML = '';
-  Object.entries(boards).forEach(([id, b]) => {
-    const btn = document.createElement('button');
-    btn.className = 'timeline-tab' + (id === activeBoard ? ' active' : '');
-    btn.textContent = b.name;
-    btn.title = b.name;
-    btn.onclick = () => switchBoard(id);
-    c.appendChild(btn);
+  const ids = Object.keys(boards);
+  ids.forEach(id => {
+    const b = boards[id];
+    const tab = document.createElement('div');
+    tab.className = 'timeline-tab' + (id === activeBoard ? ' active' : '');
+    tab.title = b.name;
+
+    const label = document.createElement('button');
+    label.className = 'timeline-tab-label';
+    label.textContent = b.name;
+    label.onclick = () => switchBoard(id);
+    tab.appendChild(label);
+
+    if (ids.length > 1) {
+      const del = document.createElement('button');
+      del.className = 'timeline-tab-del';
+      del.title = `Delete "${b.name}"`;
+      del.textContent = '\u00d7';
+      del.onclick = (e) => { e.stopPropagation(); deleteTimeline(id); };
+      tab.appendChild(del);
+    }
+    c.appendChild(tab);
   });
   const add = document.createElement('button');
   add.className = 'timeline-tab-add';
@@ -904,6 +934,32 @@ function deleteMilestone(msId) {
 
 /* ── Timelines ──────────────────────── */
 function switchBoard(id) { activeBoard = id; selectedDate = null; render(); scheduleSave(); }
+
+function deleteTimeline(id) {
+  const b = boards[id];
+  if (!b) return;
+  if (Object.keys(boards).length <= 1) {
+    alert('This is your only timeline. Use Clear to empty it instead.');
+    return;
+  }
+  const count = b.milestones.length;
+  document.getElementById('confirm-title').textContent = `Delete "${b.name}"?`;
+  document.getElementById('confirm-desc').textContent =
+    count === 0
+      ? 'This timeline is empty. It will be removed permanently.'
+      : `This timeline and its ${count} milestone${count === 1 ? '' : 's'} will be removed permanently.`;
+  document.getElementById('confirm-ok-btn').textContent = 'Delete timeline';
+  confirmCallback = () => {
+    delete boards[id];
+    if (activeBoard === id) {
+      activeBoard = Object.keys(boards)[0];
+      selectedDate = null;
+    }
+    render();
+    scheduleSave();
+  };
+  document.getElementById('confirm-modal').classList.add('open');
+}
 function openTlModal() {
   document.getElementById('tl-name').value = '';
   document.getElementById('tl-modal').classList.add('open');
