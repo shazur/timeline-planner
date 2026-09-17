@@ -531,6 +531,25 @@ function groupedByDate() {
 }
 
 /* ── Render ─────────────────────────── */
+function renderTabs() {
+  const c = document.getElementById('timeline-tabs');
+  c.innerHTML = '';
+  Object.entries(boards).forEach(([id, b]) => {
+    const btn = document.createElement('button');
+    btn.className = 'timeline-tab' + (id === activeBoard ? ' active' : '');
+    btn.textContent = b.name;
+    btn.title = b.name;
+    btn.onclick = () => switchBoard(id);
+    c.appendChild(btn);
+  });
+  const add = document.createElement('button');
+  add.className = 'timeline-tab-add';
+  add.title = 'New timeline';
+  add.textContent = '+';
+  add.onclick = openTlModal;
+  c.appendChild(add);
+}
+
 function render() { renderTabs(); renderCanvas(); updateSub(); }
 
 /* Canvas layout constants */
