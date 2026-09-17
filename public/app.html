@@ -585,6 +585,7 @@ function renderCanvas() {
   world.appendChild(axis);
 
   let maxBottom = 0;
+  let aboveOverflow = 0;
 
   groups.forEach((group, gi) => {
     const x = PAD_X + gi * COL_W + PANEL_W / 2;
@@ -604,33 +605,59 @@ function renderCanvas() {
       <div class="date-dot"></div>`;
     world.appendChild(marker);
 
-    // 3. Panels stacked downward from the axis, all visible at once
-    let y = AXIS_Y + DROP;
+    // 3. Panels placed around the axis: first below, second above, rest stacked below.
+    //    This keeps two tracks on one date visible together without scrolling.
+    let yBelow = AXIS_Y + DROP;
+    const placed = [];
     group.items.forEach((ms, mi) => {
       const panel = buildMsGroup(ms, group.date);
       panel.style.left = (x - PANEL_W / 2) + 'px';
-      panel.style.top = y + 'px';
+      panel.style.visibility = 'hidden';
+      panel.style.top = '0px';
       if (selectedDate && !isSel) panel.classList.add('dimmed');
       world.appendChild(panel);
+      const h = panel.offsetHeight;
 
-      // connector from the axis (or previous panel) down to this panel
+      let top, connTop, connH;
+      if (mi === 1) {
+        // second track goes ABOVE the axis
+        top = AXIS_Y - DROP - h;
+        connTop = top + h;
+        connH = AXIS_Y - connTop;
+        if (top < 0) aboveOverflow = Math.max(aboveOverflow, -top);
+      } else {
+        top = yBelow;
+        connTop = (mi === 0) ? AXIS_Y : yBelow - STACK_GAP;
+        connH = yBelow - connTop;
+        yBelow += h + STACK_GAP;
+        if (yBelow > maxBottom) maxBottom = yBelow;
+      }
+
+      panel.style.top = top + 'px';
+      panel.style.visibility = '';
+      placed.push({ panel, top, h });
+
       const conn = document.createElement('div');
       conn.className = 'connector' + (isToday ? ' is-today' : '') + (isSel ? ' is-selected' : '');
       conn.style.left = (x - 1) + 'px';
-      const connTop = mi === 0 ? AXIS_Y : y - STACK_GAP;
       conn.style.top = connTop + 'px';
-      conn.style.height = (y - connTop) + 'px';
+      conn.style.height = Math.max(0, connH) + 'px';
       world.appendChild(conn);
-
-      // measure after insertion to stack the next one below
-      const h = panel.offsetHeight;
-      y += h + STACK_GAP;
-      if (y > maxBottom) maxBottom = y;
     });
   });
 
+  // If a panel sits above the axis and would clip the top, push everything down.
+  if (aboveOverflow > 0) {
+    const shift = aboveOverflow + 24;
+    [...world.children].forEach(el => {
+      if (el.classList.contains('empty-state')) return;
+      el.style.top = (parseFloat(el.style.top || 0) + shift) + 'px';
+    });
+    maxBottom += shift;
+  }
+
   world.style.width = worldW + 'px';
-  world.style.height = (maxBottom + 80) + 'px';
+  world.style.height = (maxBottom + 60) + 'px';
 }
 
 function buildMsGroup(ms, date) {
