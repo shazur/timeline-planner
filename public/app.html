@@ -262,6 +262,7 @@
       <div class="topbar-brand">
         <div class="topbar-icon">🗓</div>
         Timeline Planner
+        <span class="topbar-sub" id="topbar-sub"></span>
       </div>
       <div class="timeline-tabs" id="timeline-tabs">
         <!-- tabs rendered by JS -->
@@ -536,10 +537,11 @@ function buildCard(card, msId) {
 }
 
 function updateSub() {
+  const el = document.querySelector('.topbar-sub');
+  if (!el) return;
   const ms = currentBoard().milestones;
-  if (!ms.length) return;
   const fmt = s => new Date(s+'T12:00:00').toLocaleDateString('en-GB',{month:'short',year:'numeric'});
-  document.querySelector('.topbar-sub').textContent = ms.length ? `${fmt(ms[0].date)} → ${fmt(ms[ms.length-1].date)}` : '';
+  el.textContent = ms.length ? `${fmt(ms[0].date)} → ${fmt(ms[ms.length-1].date)}` : '';
 }
 
 /* ── Selection ──────────────────────── */
