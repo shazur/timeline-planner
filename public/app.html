@@ -140,7 +140,7 @@
   /* ── TIMELINE RAIL ────────────────── */
   .timeline-stage {
     position: relative;
-    flex-shrink: 0; height: 118px;
+    flex-shrink: 0; height: 132px;
     overflow-x: auto; overflow-y: visible;
     background: linear-gradient(180deg, rgba(255,255,255,0.7), rgba(255,255,255,0.35));
     border-bottom: 1px solid var(--line);
@@ -167,7 +167,13 @@
 
   .date-node {
     position: relative; z-index: 10; cursor: pointer;
-    display: flex; flex-direction: column; align-items: center; gap: 7px;
+    display: flex; flex-direction: column; align-items: center; gap: 13px;
+  }
+  /* Label sits below the rail on an opaque plate so the rule never crosses the text */
+  .date-label-plate {
+    background: var(--paper);
+    border-radius: 8px;
+    padding: 3px 8px;
   }
 
   .date-dot {
@@ -595,10 +601,12 @@ function renderTimeline() {
     node.innerHTML = `
       ${isToday ? '<span class="today-badge">Today</span>' : ''}
       <div class="date-dot"></div>
-      <div class="date-label">
-        <div class="date-text">${fmtDate(group.date)}</div>
-        <div class="date-names">${names}${more}</div>
-        ${countPill}
+      <div class="date-label-plate">
+        <div class="date-label">
+          <div class="date-text">${fmtDate(group.date)}</div>
+          <div class="date-names">${names}${more}</div>
+          ${countPill}
+        </div>
       </div>`;
     wrap.appendChild(node);
     inner.appendChild(wrap);
