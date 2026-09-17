@@ -657,7 +657,7 @@ function openConfirmClear() {
   document.getElementById('confirm-modal').classList.add('open');
 }
 function closeConfirm() { document.getElementById('confirm-modal').classList.remove('open'); confirmCallback = null; }
-function confirmOk() { closeConfirm(); confirmCallback?.(); }
+function confirmOk() { const cb = confirmCallback; closeConfirm(); cb?.(); }
 
 /* ── Scroll sync ────────────────────── */
 function syncScroll() {
