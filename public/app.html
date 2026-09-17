@@ -140,7 +140,7 @@
   /* ── TIMELINE RAIL ────────────────── */
   .timeline-stage {
     position: relative;
-    flex-shrink: 0; height: 168px;
+    flex-shrink: 0; height: 186px;
     overflow-x: auto; overflow-y: auto;
     background: linear-gradient(180deg, rgba(255,255,255,0.7), rgba(255,255,255,0.35));
     border-bottom: 1px solid var(--line);
@@ -188,18 +188,29 @@
   .date-axis {
     position: relative;
     display: flex; flex-direction: column; align-items: flex-start;
-    gap: 9px;
-    margin-top: 10px;
-    padding-left: 7px;
+    gap: 16px;
+    margin-top: 14px;
+    padding-left: 22px;
   }
   /* the vertical spine dropping from the horizontal rail */
   .date-axis::before {
     content: '';
     position: absolute;
-    left: 7px; top: -10px; bottom: 9px;
+    left: 7px; top: -14px; bottom: 11px;
     width: 2px; border-radius: 2px;
     background: var(--line-2);
   }
+  /* elbow connector from spine across to each dot */
+  .axis-stop::before {
+    content: '';
+    position: absolute;
+    left: -15px; top: 50%; width: 13px; height: 2px;
+    background: var(--line-2); border-radius: 2px;
+    transform: translateY(-50%);
+  }
+  .date-axis.single .axis-stop::before { display: none; }
+  .date-node.today .axis-stop::before { background: var(--indigo-line); }
+  .date-node.selected .axis-stop::before { background: var(--plum-line); }
   .date-node.today .date-axis::before { background: var(--indigo-line); }
   .date-node.selected .date-axis::before { background: var(--plum-line); }
   /* single milestone on a date needs no visible spine */
