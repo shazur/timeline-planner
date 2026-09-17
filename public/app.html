@@ -729,13 +729,7 @@ function selectDate(date) {
 
   if (selectedDate === date) {
     selectedDate = null;
-    msOnDate.forEach(ms => ms.cards.forEach(c => c.collapsed = true));
   } else {
-    if (selectedDate) {
-      currentBoard().milestones
-        .filter(m => m.date === selectedDate)
-        .forEach(ms => ms.cards.forEach(c => c.collapsed = true));
-    }
     selectedDate = date;
     msOnDate.forEach(ms => ms.cards.forEach(c => c.collapsed = false));
   }
