@@ -137,161 +137,94 @@
 
   .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
 
-  /* ── TIMELINE RAIL ────────────────── */
-  .timeline-stage {
-    position: relative;
-    flex-shrink: 0; height: 186px;
-    overflow-x: auto; overflow-y: auto;
-    background: linear-gradient(180deg, rgba(255,255,255,0.7), rgba(255,255,255,0.35));
-    border-bottom: 1px solid var(--line);
-    scrollbar-width: none;
+  /* ── CANVAS ───────────────────────── */
+  .canvas {
+    flex: 1; position: relative; overflow: auto;
+    background-image:
+      linear-gradient(rgba(35,33,30,0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(35,33,30,0.035) 1px, transparent 1px);
+    background-size: 28px 28px;
+    cursor: grab;
+    scrollbar-width: thin; scrollbar-color: var(--line-2) transparent;
   }
-  .timeline-stage::-webkit-scrollbar { display: none; }
-  .timeline-inner {
-    position: relative; height: 100%; min-width: max-content;
-    padding: 0 80px; display: flex; align-items: flex-start;
-  }
-  /* Rail runs through the date-caption row; vertical axes drop from it */
-  .timeline-rail {
-    position: absolute; top: 43px; left: 0; right: 0;
-    height: 2px; pointer-events: none; z-index: 1;
-    background: linear-gradient(90deg,
-      transparent 0%,
-      var(--line-2) 7%,
-      var(--line-2) 93%,
-      transparent 100%);
-    border-radius: 2px;
+  .canvas.grabbing { cursor: grabbing; }
+  .canvas::-webkit-scrollbar { width: 10px; height: 10px; }
+  .canvas::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 5px; border: 3px solid var(--paper); }
+
+  /* The world: sized in JS to fit all content */
+  .world { position: relative; }
+
+  /* The long horizontal axis, drawn across the whole world */
+  .axis-line {
+    position: absolute; left: 0; height: 3px; border-radius: 3px;
+    background: linear-gradient(90deg, transparent 0%, var(--line-2) 3%, var(--line-2) 97%, transparent 100%);
+    pointer-events: none; z-index: 1;
   }
 
-  /* ── DATE NODE (one per calendar date) ── */
-  .date-spacing { width: 268px; display: flex; justify-content: center; flex-shrink: 0; }
-
-  .date-node {
-    position: relative; z-index: 10; cursor: pointer;
+  /* A date marker sitting on the axis */
+  .date-marker {
+    position: absolute; z-index: 4;
     display: flex; flex-direction: column; align-items: center;
-    padding-top: 34px;
+    transform: translateX(-50%);
+    cursor: pointer; user-select: none;
   }
-
-  /* Date caption, sits ON the horizontal rail row */
   .date-cap {
-    background: var(--paper);
-    border-radius: 8px; padding: 2px 9px;
-    font-family: var(--font-mono); font-size: 10.5px; color: var(--ink-3);
+    background: var(--paper); border: 1px solid var(--line);
+    border-radius: 20px; padding: 3px 11px;
+    font-family: var(--font-mono); font-size: 11px; color: var(--ink-3);
     letter-spacing: 0.04em; white-space: nowrap;
-    border: 1px solid var(--line);
-    position: relative; z-index: 3;
+    box-shadow: var(--shadow-1); transition: var(--t);
   }
-  .date-node.today .date-cap { color: var(--indigo); border-color: var(--indigo-line); background: var(--indigo-soft); font-weight: 500; }
-  .date-node.selected .date-cap { color: var(--plum); border-color: var(--plum-line); background: var(--plum-soft); font-weight: 500; }
-
-  /* ── VERTICAL AXIS: one stop per milestone on this date ── */
-  .date-axis {
-    position: relative;
-    display: flex; flex-direction: column; align-items: flex-start;
-    gap: 16px;
-    margin-top: 14px;
-    padding-left: 22px;
-  }
-  /* the vertical spine dropping from the horizontal rail */
-  .date-axis::before {
-    content: '';
-    position: absolute;
-    left: 7px; top: -14px; bottom: 11px;
-    width: 2px; border-radius: 2px;
-    background: var(--line-2);
-  }
-  /* elbow connector from spine across to each dot */
-  .axis-stop::before {
-    content: '';
-    position: absolute;
-    left: -15px; top: 50%; width: 13px; height: 2px;
-    background: var(--line-2); border-radius: 2px;
-    transform: translateY(-50%);
-  }
-  .date-axis.single .axis-stop::before { display: none; }
-  .date-node.today .axis-stop::before { background: var(--indigo-line); }
-  .date-node.selected .axis-stop::before { background: var(--plum-line); }
-  .date-node.today .date-axis::before { background: var(--indigo-line); }
-  .date-node.selected .date-axis::before { background: var(--plum-line); }
-  /* single milestone on a date needs no visible spine */
-  .date-axis.single::before { display: none; }
-  .date-axis.single { padding-left: 0; margin-top: 8px; }
-
-  .axis-stop {
-    position: relative; z-index: 2;
-    display: flex; align-items: center; gap: 8px;
-    max-width: 240px;
-  }
-  .date-axis.single .axis-stop { justify-content: center; }
+  .date-marker.today .date-cap { color: #fff; background: var(--indigo); border-color: var(--indigo); font-weight: 500; }
+  .date-marker.selected .date-cap { color: #fff; background: var(--plum); border-color: var(--plum); font-weight: 500; }
+  .date-marker:hover .date-cap { border-color: var(--indigo); color: var(--indigo); }
+  .date-marker.today:hover .date-cap, .date-marker.selected:hover .date-cap { color: #fff; }
 
   .date-dot {
-    width: 13px; height: 13px; border-radius: 50%; flex-shrink: 0;
-    border: 2px solid var(--line-2);
-    background: var(--paper-2);
-    transition: var(--t);
-    box-shadow: 0 0 0 3px var(--paper);
+    width: 15px; height: 15px; border-radius: 50%; margin-top: 7px;
+    border: 3px solid var(--line-2); background: var(--paper);
+    box-shadow: 0 0 0 4px var(--paper); transition: var(--t);
   }
-  .date-node:hover .date-dot { border-color: var(--indigo); background: var(--indigo-soft); }
-
-  .date-node.today .date-dot {
+  .date-marker:hover .date-dot { border-color: var(--indigo); }
+  .date-marker.today .date-dot {
     border-color: var(--indigo); background: var(--indigo);
-    box-shadow: 0 0 0 3px var(--indigo-soft), 0 0 0 5px var(--paper);
     animation: pulse 2.6s ease-in-out infinite;
   }
   @keyframes pulse {
-    0%,100% { box-shadow: 0 0 0 3px var(--indigo-soft), 0 0 0 5px var(--paper); }
-    50%      { box-shadow: 0 0 0 6px var(--indigo-soft), 0 0 0 8px var(--paper); }
+    0%,100% { box-shadow: 0 0 0 4px var(--paper), 0 0 0 7px var(--indigo-soft); }
+    50%     { box-shadow: 0 0 0 4px var(--paper), 0 0 0 11px var(--indigo-soft); }
   }
-  .date-node.selected .date-dot {
-    border-color: var(--plum); background: var(--plum);
-    box-shadow: 0 0 0 3px var(--plum-soft), 0 0 0 5px var(--paper);
-    animation: none;
-  }
-
-  .axis-name {
-    font-family: var(--font-display);
-    font-size: 12.5px; font-weight: 600; color: var(--ink-2);
-    line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    transition: var(--t);
-  }
-  .date-node:hover .axis-name, .date-node.selected .axis-name { color: var(--ink); }
-  .axis-track {
-    font-family: var(--font-ui); font-size: 9px; font-weight: 600;
-    color: var(--indigo); background: var(--indigo-soft);
-    border: 1px solid var(--indigo-line);
-    padding: 0 5px; border-radius: 20px; flex-shrink: 0;
-    text-transform: uppercase; letter-spacing: 0.04em;
-  }
+  .date-marker.selected .date-dot { border-color: var(--plum); background: var(--plum); animation: none; }
 
   .today-badge {
     font-family: var(--font-ui);
     font-size: 8.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
     background: var(--indigo); color: #fff; padding: 2px 6px; border-radius: 3px;
-    position: absolute; top: 8px; left: 50%; transform: translateX(-50%); white-space: nowrap;
+    margin-bottom: 5px; white-space: nowrap;
   }
 
-  /* ── CARDS AREA ───────────────────── */
-  .cards-area { flex: 1; overflow: auto; padding: 22px 0 40px; scrollbar-width: thin; scrollbar-color: var(--line-2) transparent; align-content: start; }
-  .cards-area::-webkit-scrollbar { width: 8px; height: 8px; }
-  .cards-area::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 4px; border: 2px solid var(--paper); }
-  .cards-viewport { display: flex; min-width: max-content; padding: 0 80px; align-items: flex-start; }
+  /* Connector from the axis dot down/up to each milestone panel */
+  .connector {
+    position: absolute; width: 2px; z-index: 2;
+    background: var(--line-2); border-radius: 2px; pointer-events: none;
+  }
+  .connector.is-today { background: var(--indigo-line); }
+  .connector.is-selected { background: var(--plum-line); }
 
-  /* One column per DATE; holds stacked milestone groups */
-  .date-col { width: 268px; flex-shrink: 0; display: flex; flex-direction: column; gap: 14px; padding: 0 10px; transition: opacity var(--t); }
-  .date-col.dimmed { opacity: 0.32; }
-
-  /* ── MILESTONE GROUP (stacked within a date) ── */
+  /* ── MILESTONE PANEL placed on the canvas ── */
   .ms-group {
+    position: absolute; z-index: 3;
+    width: 252px;
     background: var(--surface);
     border: 1px solid var(--line);
     border-radius: var(--r-lg);
     box-shadow: var(--shadow-2);
     overflow: hidden;
-    transition: box-shadow var(--t), border-color var(--t);
+    transition: box-shadow var(--t), border-color var(--t), opacity var(--t);
   }
   .ms-group:hover { box-shadow: var(--shadow-3); border-color: var(--line-2); }
   .ms-group.is-selected { border-color: var(--plum-line); box-shadow: 0 0 0 3px var(--plum-soft), var(--shadow-3); }
-
+  .ms-group.dimmed { opacity: 0.3; }
   .ms-group-head {
     display: flex; align-items: flex-start; gap: 8px;
     padding: 10px 12px;
@@ -374,8 +307,9 @@
 
   /* Empty state */
   .empty-state {
+    position: absolute; inset: 0;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 10px; padding: 70px 30px; width: 100%; text-align: center;
+    gap: 10px; padding: 70px 30px; text-align: center;
   }
   .empty-state-title { font-family: var(--font-display); font-size: 19px; font-weight: 600; color: var(--ink-2); }
   .empty-state-desc { font-size: 13px; color: var(--ink-3); max-width: 340px; line-height: 1.6; }
@@ -449,13 +383,8 @@
   </header>
 
   <div class="main">
-    <div class="timeline-stage" id="timeline-stage">
-      <div class="timeline-inner" id="timeline-inner">
-        <div class="timeline-rail"></div>
-      </div>
-    </div>
-    <div class="cards-area" id="cards-area">
-      <div class="cards-viewport" id="cards-viewport"></div>
+    <div class="canvas" id="canvas">
+      <div class="world" id="world"></div>
     </div>
   </div>
 </div>
@@ -602,83 +531,87 @@ function groupedByDate() {
 }
 
 /* ── Render ─────────────────────────── */
-function render() { renderTabs(); renderTimeline(); renderCards(); updateSub(); }
+function render() { renderTabs(); renderCanvas(); updateSub(); }
 
-function renderTabs() {
-  const c = document.getElementById('timeline-tabs');
-  c.innerHTML = '';
-  Object.entries(boards).forEach(([id, b]) => {
-    const btn = document.createElement('button');
-    btn.className = 'timeline-tab' + (id === activeBoard ? ' active' : '');
-    btn.textContent = b.name;
-    btn.title = b.name;
-    btn.onclick = () => switchBoard(id);
-    c.appendChild(btn);
-  });
-  const add = document.createElement('button');
-  add.className = 'timeline-tab-add';
-  add.title = 'New timeline';
-  add.textContent = '+';
-  add.onclick = openTlModal;
-  c.appendChild(add);
-}
+/* Canvas layout constants */
+const COL_W = 300;       // horizontal spacing between dates
+const PAD_X = 120;       // left/right padding in the world
+const AXIS_Y = 150;      // y of the horizontal axis inside the world
+const PANEL_W = 252;
+const STACK_GAP = 22;    // vertical gap between stacked panels
+const DROP = 52;         // gap from axis dot to first panel
 
-function renderTimeline() {
-  const inner = document.getElementById('timeline-inner');
-  inner.innerHTML = '<div class="timeline-rail"></div>';
-  groupedByDate().forEach(group => {
-    const isToday = group.date === TODAY;
-    const isSel = group.date === selectedDate;
-    const wrap = document.createElement('div');
-    wrap.className = 'date-spacing';
-
-    const node = document.createElement('div');
-    node.className = 'date-node' + (isToday ? ' today' : '') + (isSel ? ' selected' : '');
-    node.onclick = () => selectDate(group.date);
-
-    const multi = group.items.length > 1;
-    const stops = group.items.map(m => `
-      <div class="axis-stop">
-        <div class="date-dot"></div>
-        <span class="axis-name">${esc(m.name)}</span>
-        ${m.label ? `<span class="axis-track">${esc(m.label)}</span>` : ''}
-      </div>`).join('');
-
-    node.innerHTML = `
-      ${isToday ? '<span class="today-badge">Today</span>' : ''}
-      <div class="date-cap">${fmtDate(group.date)}</div>
-      <div class="date-axis${multi ? '' : ' single'}">${stops}</div>`;
-    wrap.appendChild(node);
-    inner.appendChild(wrap);
-  });
-}
-
-function renderCards() {
-  const vp = document.getElementById('cards-viewport');
-  vp.innerHTML = '';
+function renderCanvas() {
+  const world = document.getElementById('world');
+  world.innerHTML = '';
   const groups = groupedByDate();
 
   if (!groups.length) {
-    vp.innerHTML = `
+    world.style.width = '100%';
+    world.style.height = '100%';
+    world.innerHTML = `
       <div class="empty-state">
         <div class="empty-state-title">Nothing on this timeline yet</div>
-        <div class="empty-state-desc">Add a milestone to get started. Give two milestones the same date and they'll stack as parallel tracks on that point of the timeline.</div>
+        <div class="empty-state-desc">Add a milestone to get started. Give two milestones the same date and they stack vertically on the same point of the axis.</div>
       </div>`;
     return;
   }
 
-  groups.forEach(group => {
-    const isDimmed = selectedDate && group.date !== selectedDate;
-    const col = document.createElement('div');
-    col.className = 'date-col' + (isDimmed ? ' dimmed' : '');
-    col.setAttribute('data-date', group.date);
+  // 1. Axis line spanning the whole world
+  const worldW = PAD_X * 2 + (groups.length - 1) * COL_W + PANEL_W;
+  const axis = document.createElement('div');
+  axis.className = 'axis-line';
+  axis.style.top = AXIS_Y + 'px';
+  axis.style.width = worldW + 'px';
+  world.appendChild(axis);
 
-    group.items.forEach(ms => {
-      col.appendChild(buildMsGroup(ms, group.date));
+  let maxBottom = 0;
+
+  groups.forEach((group, gi) => {
+    const x = PAD_X + gi * COL_W + PANEL_W / 2;
+    const isToday = group.date === TODAY;
+    const isSel = group.date === selectedDate;
+
+    // 2. Date marker on the axis
+    const marker = document.createElement('div');
+    marker.className = 'date-marker' + (isToday ? ' today' : '') + (isSel ? ' selected' : '');
+    marker.style.left = x + 'px';
+    marker.style.top = (AXIS_Y - 46) + 'px';
+    marker.setAttribute('data-date', group.date);
+    marker.onclick = () => selectDate(group.date);
+    marker.innerHTML = `
+      ${isToday ? '<span class="today-badge">Today</span>' : ''}
+      <div class="date-cap">${fmtDate(group.date)}</div>
+      <div class="date-dot"></div>`;
+    world.appendChild(marker);
+
+    // 3. Panels stacked downward from the axis, all visible at once
+    let y = AXIS_Y + DROP;
+    group.items.forEach((ms, mi) => {
+      const panel = buildMsGroup(ms, group.date);
+      panel.style.left = (x - PANEL_W / 2) + 'px';
+      panel.style.top = y + 'px';
+      if (selectedDate && !isSel) panel.classList.add('dimmed');
+      world.appendChild(panel);
+
+      // connector from the axis (or previous panel) down to this panel
+      const conn = document.createElement('div');
+      conn.className = 'connector' + (isToday ? ' is-today' : '') + (isSel ? ' is-selected' : '');
+      conn.style.left = (x - 1) + 'px';
+      const connTop = mi === 0 ? AXIS_Y : y - STACK_GAP;
+      conn.style.top = connTop + 'px';
+      conn.style.height = (y - connTop) + 'px';
+      world.appendChild(conn);
+
+      // measure after insertion to stack the next one below
+      const h = panel.offsetHeight;
+      y += h + STACK_GAP;
+      if (y > maxBottom) maxBottom = y;
     });
-
-    vp.appendChild(col);
   });
+
+  world.style.width = worldW + 'px';
+  world.style.height = (maxBottom + 80) + 'px';
 }
 
 function buildMsGroup(ms, date) {
@@ -790,8 +723,12 @@ function selectDate(date) {
   render();
   if (selectedDate) {
     setTimeout(() => {
-      document.querySelector(`#cards-viewport [data-date="${date}"]`)
-        ?.scrollIntoView({ behavior:'smooth', inline:'center', block:'nearest' });
+      const m = document.querySelector(`.date-marker[data-date="${date}"]`);
+      const canvas = document.getElementById('canvas');
+      if (m && canvas) {
+        const target = parseFloat(m.style.left) - canvas.clientWidth / 2;
+        canvas.scrollTo({ left: Math.max(0, target), behavior: 'smooth' });
+      }
     }, 40);
   }
   scheduleSave();
@@ -923,24 +860,37 @@ function closeConfirm() { document.getElementById('confirm-modal').classList.rem
 function confirmOk() { const cb = confirmCallback; closeConfirm(); cb?.(); }
 
 /* ── Scroll sync ────────────────────── */
-function syncScroll() {
-  const stage = document.getElementById('timeline-stage');
-  const area  = document.getElementById('cards-area');
-  const inner = document.getElementById('timeline-inner');
-  const vp    = document.getElementById('cards-viewport');
-  let sl = false, cl = false;
-  stage.addEventListener('scroll', () => {
-    if (cl) return; sl = true;
-    const r = stage.scrollLeft / (inner.scrollWidth - stage.clientWidth || 1);
-    area.scrollLeft = r * (vp.scrollWidth - area.clientWidth);
-    requestAnimationFrame(() => sl = false);
+/* Drag-to-pan the canvas (ignores drags that start on interactive chrome) */
+function initPan() {
+  const canvas = document.getElementById('canvas');
+  let down = false, sx = 0, sy = 0, sl = 0, st = 0, moved = false;
+
+  canvas.addEventListener('mousedown', e => {
+    if (e.button !== 0) return;
+    if (e.target.closest('.card, .add-btn, .ms-group-head, .date-marker, button, input, a, .checklist-item')) return;
+    down = true; moved = false;
+    sx = e.clientX; sy = e.clientY;
+    sl = canvas.scrollLeft; st = canvas.scrollTop;
+    canvas.classList.add('grabbing');
   });
-  area.addEventListener('scroll', () => {
-    if (sl) return; cl = true;
-    const r = area.scrollLeft / (vp.scrollWidth - area.clientWidth || 1);
-    stage.scrollLeft = r * (inner.scrollWidth - stage.clientWidth);
-    requestAnimationFrame(() => cl = false);
+
+  window.addEventListener('mousemove', e => {
+    if (!down) return;
+    const dx = e.clientX - sx, dy = e.clientY - sy;
+    if (Math.abs(dx) > 3 || Math.abs(dy) > 3) moved = true;
+    canvas.scrollLeft = sl - dx;
+    canvas.scrollTop  = st - dy;
   });
+
+  window.addEventListener('mouseup', () => {
+    down = false;
+    canvas.classList.remove('grabbing');
+  });
+
+  // shift+wheel scrolls horizontally, matching canvas-tool convention
+  canvas.addEventListener('wheel', e => {
+    if (e.shiftKey) { canvas.scrollLeft += e.deltaY; e.preventDefault(); }
+  }, { passive: false });
 }
 
 /* ── Keyboard / overlay dismiss ─────── */
@@ -959,7 +909,7 @@ function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt
 
 /* ── Init ───────────────────────────── */
 loadAll();
-syncScroll();
+initPan();
 </script>
 </body>
 </html>
