@@ -228,12 +228,14 @@
   /* ── DRAG TO REORDER ──────────────── */
   .ms-drag {
     flex-shrink: 0; cursor: grab;
-    color: var(--ink-3); font-size: 13px; line-height: 1;
-    padding: 2px 3px; margin-left: -2px; border-radius: 4px;
+    color: var(--ink-3); font-size: 14px; line-height: 1;
+    padding: 3px 4px; margin-left: -3px; border-radius: 5px;
     letter-spacing: -1px; user-select: none;
+    border: 1px solid transparent;
     transition: var(--t);
   }
-  .ms-drag:hover { background: var(--indigo-soft); color: var(--indigo); }
+  .ms-group:hover .ms-drag { color: var(--indigo); border-color: var(--indigo-line); background: var(--indigo-soft); }
+  .ms-drag:hover { background: var(--indigo); color: #fff; border-color: var(--indigo); }
   .ms-drag:active { cursor: grabbing; }
   .ms-group.dragging {
     z-index: 30;
