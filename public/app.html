@@ -558,7 +558,7 @@ const PAD_X = 120;       // left/right padding in the world
 const AXIS_Y = 92;       // y of the horizontal axis inside the world
 const PANEL_W = 252;
 const STACK_GAP = 14;    // vertical gap between stacked panels
-const DROP = 34;         // gap from axis dot to first panel
+const DROP = 22;         // gap from axis dot to first panel
 
 function renderCanvas() {
   const world = document.getElementById('world');
@@ -596,7 +596,7 @@ function renderCanvas() {
     const marker = document.createElement('div');
     marker.className = 'date-marker' + (isToday ? ' today' : '') + (isSel ? ' selected' : '');
     marker.style.left = x + 'px';
-    marker.style.top = (AXIS_Y - 46) + 'px';
+    marker.style.top = (AXIS_Y - 42) + 'px';
     marker.setAttribute('data-date', group.date);
     marker.onclick = () => selectDate(group.date);
     marker.innerHTML = `
